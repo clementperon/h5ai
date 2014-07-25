@@ -85,7 +85,7 @@ function setup() {
 
 	// EXTERNAL COMMANDS
 	foreach (array("tar", "zip", "convert", "ffmpeg", "avconv", "du") as $cmd) {
-		$cmdv = HAS_WIN_OS ? array("which", $cmd) : array("command", "-v", $cmd);
-		define("HAS_CMD_" . strtoupper($cmd), @preg_match("#" . $cmd . "(.exe)?$#i", exec_cmdv($cmdv)) > 0);
+		exec($cmd,$useless,$retval);
+		define("HAS_CMD_" . strtoupper($cmd), HAS_WIN_OS ? $retval != 1 : $retval != 127);
 	}
 }
