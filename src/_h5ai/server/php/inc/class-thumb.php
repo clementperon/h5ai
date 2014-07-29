@@ -2,8 +2,9 @@
 
 class Thumb {
 
-	private static $FFMPEG_CMDV = array("ffmpeg", "-ss", "1", "-i", "[SRC]", "-an", "-vframes", "1", "[DEST]");
-	private static $AVCONV_CMDV = array("avconv", "-ss", "1", "-i", "[SRC]", "-an", "-vframes", "1", "[DEST]");
+	private static $FFMPEG_CMDV = array("ffmpeg", "-ss", "[SEC]", "-i", "[SRC]", "-an", "-vframes", "1", "[DEST]");
+	private static $AVCONV_CMDV = array("avconv", "-ss", "[SEC]", "-i", "[SRC]", "-an", "-vframes", "1", "[DEST]");
+	private static $AVCONV_LENGTH = array("avconv -i ", "[SRC]", " 2>&1 | grep 'Duration' | cut -d ' ' -f 4 | sed s#,##");
 	private static $CONVERT_CMDV = array("convert", "-strip", "[SRC][0]", "[DEST]");
 	private static $THUMB_CACHE = "thumbs";
 
@@ -91,9 +92,22 @@ class Thumb {
 
 		if (!file_exists($capture_path) || filemtime($source_path) >= filemtime($capture_path)) {
 
+			$cmdl = Thumb::$AVCONV_LENGTH;
+
+			//Get Duration of the movie in HH:MM:SS
+                        foreach ($cmdl as &$arg) {
+                                $arg = str_replace("[SRC]", escapeshellarg($source_path), $arg);
+                        }
+                        $length = exec(implode($cmdl));
+
+			//Convert HH:MM:SS to seconds
+			sscanf($length, "%d:%d:%d", $hours, $minutes, $seconds);
+			$time_seconds = isset($seconds) ? $hours * 3600 + $minutes * 60 + $seconds : $hours * 60 + $minutes;
+
 			foreach ($cmdv as &$arg) {
 				$arg = str_replace("[SRC]", $source_path, $arg);
 				$arg = str_replace("[DEST]", $capture_path, $arg);
+				$arg = str_replace("[SEC]", $time_seconds/2, $arg);
 			}
 
 			exec_cmdv($cmdv);
