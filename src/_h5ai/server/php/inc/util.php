@@ -105,7 +105,9 @@ function delete_path($path, $recursive = true) {
 	if (is_dir($path)) {
 		if ($recursive === true && $dir = opendir($path)) {
 			while (($name = readdir($dir)) !== false) {
-				delete_path($path . "/" . $name);
+				if($name != "." && $name != ".."){
+					delete_path($path . "/" . $name);
+				}
 			}
 			closedir($dir);
 		}
