@@ -1,13 +1,39 @@
 # Changelog
-**h5ai** uses [semantic versioning](http://semver.org/).
 
 
-## develop branch
+* updates sidebar settings
+* adds rounded corners to QR code
+* adds editorconfig
+* updates build process, now uses [mkr](http://larsjung.de/mkr/) and [fQuery](http://larsjung.de/fquery/)
+* removes `jQuery.fracs`
+* updates `jQuery.qrcode` to 0.10.1
+* updates `jQuery.scrollpanel` to 0.4.0
+* updates `modulejs` to 1.4.0
 
+## v0.26.1 - *2014-08-17*
+
+* fixes links
+
+
+## v0.26.0 - *2014-08-16*
+
+* removes True Type fonts
+* outsources themes to [h5ai-themes](https://github.com/lrsjng/h5ai-themes)
+* adds filesize fallback for large files and 32bit PHP
+* fixes server detection
+* adds config file tests to info page
+* removes JSON shim
+* adds caching of command checks
+* updates `jQuery.mousewheel` to 3.1.12
+* updates `jQuery.qrcode` to 0.8.0
+* replaces `markdown` with [`marked`](https://github.com/chjj/marked) 0.3.2
+* updates `modulejs` to 0.4.5
+* updates `Moment.js` to 2.8.1
+* replaces `underscore` with [`Lo-Dash`](https://github.com/lodash/lodash) 2.4.1
+* replaces `SyntaxHighlighter` with [`Prism`](http://prismjs.com) 2014-08-04
 * per directory configure files
 * MD5 Password encryption
 * Possibility to remove Icon, Size and Last Modified Date
-
 
 ## v0.25.2 - *2014-07-01*
 
@@ -44,6 +70,7 @@
 * disable thumbs in `cache` folder
 * fixes QR code URI origin (issue [#287](https://github.com/lrsjng/h5ai/issues/287))
 * replaces PHP backtick operator with `exec`
+<<<<<<< HEAD
 * updates H5BP to 4.3.0
 * updates jQuery to 2.1.1
 * updates json2.js to 2014-02-04
@@ -51,6 +78,16 @@
 * updates Modernizr to 2.8.2
 * updates Moment.js to 2.6.0
 * updates Underscore.js to 1.6.0
+=======
+* removes server side file manipulation extensions `dropbox`, `delete` and `rename`
+* updates `H5BP` to 4.3.0
+* updates `jQuery` to 2.1.1
+* updates `json2.js` to 2014-02-04
+* updates `markdown-js` to 0.5.0
+* updates `Modernizr` to 2.8.2
+* updates `Moment.js` to 2.6.0
+* updates `Underscore.js` to 1.6.0
+>>>>>>> lrsng/master
 * language updates (`bg`, `ko`, `pt`, `sl`, `sv`, `zh-cn`)
 
 
@@ -95,12 +132,12 @@
 * now uses scalable images for the interface
 * fixes filter (ignore parent folder, display of `no match`)
 * lots of small fixes
-* updates H5BP to 4.2.0
-* updates jQuery to 2.0.3
-* updates jQuery.mousewheel to 3.1.3
-* updates Moment.js to 2.1.0
-* updates markdown-js to 0.4.0-9c21acdf08
-* updates json2.js to 2013-05-26
+* updates `H5BP` to 4.2.0
+* updates `jQuery` to 2.0.3
+* updates `jQuery.mousewheel` to 3.1.3
+* updates `Moment.js` to 2.1.0
+* updates `markdown-js` to 0.4.0-9c21acdf08
+* updates `json2.js` to 2013-05-26
 * adds `uk` translation by Viktor Matveenko
 * updates to `pl` translation by Mark
 

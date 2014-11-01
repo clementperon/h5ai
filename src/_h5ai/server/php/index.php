@@ -13,40 +13,12 @@ define("PASSHASH", "da39a3ee5e6b4b0d3255bfef95601890afd80709");
 
 function normalized_require_once($lib) {
 
-	require_once(preg_replace("#[\\\\/]+#", "/", dirname(__FILE__) . "/inc/${lib}.php"));
+    require_once(preg_replace("#[\\\\/]+#", "/", dirname(__FILE__) . "/inc/${lib}.php"));
 }
 
-normalized_require_once("util");
-normalized_require_once("setup");
-normalized_require_once("class-api");
-normalized_require_once("class-app");
-normalized_require_once("class-archive");
-normalized_require_once("class-item");
-normalized_require_once("class-thumb");
-normalized_require_once("class-image");
+function __autoload($class_name) {
 
-setup();
-$app = new App();
-
-$options = $app->get_options();
-if ($options["security"]["enabled"] &&
-	( !isset($_SERVER['PHP_AUTH_USER'])
-	|| !isset($_SERVER['PHP_AUTH_PW'])
-	|| ($_SERVER['PHP_AUTH_USER'] !== $options["security"]["login"])
-	|| (md5($_SERVER['PHP_AUTH_PW']) !== $options["security"]["password"])
-	|| !(empty($options["security"]["allowedips"]) || in_array($_SERVER['REMOTE_ADDR'], $options["security"]["allowedips"]))
-        )
-) {
-
-	header('WWW-Authenticate: Basic realm='.$options["security"]["message"]);
-	header('HTTP/1.0 401 Unauthorized');
-	exit;
+    normalized_require_once("class-" . strtolower($class_name));
 }
-else if (has_request_param("action")) {
 
-	$api = new Api($app);
-	$api->apply();
-} else {
-	define("FALLBACK", $app->get_fallback());
-	normalized_require_once("page");
-}
+Bootstrap::run();

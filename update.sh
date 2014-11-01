@@ -1,5 +1,6 @@
 #!/bin/bash
-makejs build-uncompressed
+npm install
+npm run build
 mv /var/www/_h5ai/cache/thumbs /var/www
 rm -r /var/www/_h5ai/
 mv build/_h5ai/ /var/www/

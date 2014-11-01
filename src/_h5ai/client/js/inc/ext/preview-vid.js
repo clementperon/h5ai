@@ -1,123 +1,124 @@
-
 modulejs.define('ext/preview-vid', ['_', '$', 'core/settings', 'core/event', 'ext/preview'], function (_, $, allsettings, event, preview) {
 
-	var settings = _.extend({
-			enabled: false,
-			types: []
-		}, allsettings['preview-vid']),
+    var settings = _.extend({
+            enabled: false,
+            types: []
+        }, allsettings['preview-vid']);
 
-		preloadVid = function (src, callback) {
 
-			var $video = $('<video/>')
-				.one('loadedmetadata', function () {
+    function preloadVid(src, callback) {
 
-					callback($video);
-					// setTimeout(function () { callback($video); }, 1000); // for testing
-				})
-				.attr('autoplay', 'autoplay')
-				.attr('controls', 'controls')
-				.attr('src', src);
-		},
+        var $video = $('<video/>')
+                        .one('loadedmetadata', function () {
 
-		onEnter = function (items, idx) {
+                            callback($video);
+                            // setTimeout(function () { callback($video); }, 1000); // for testing
+                        })
+                        .attr('autoplay', 'autoplay')
+                        .attr('controls', 'controls')
+                        .attr('src', src);
+    }
 
-			var currentItems = items,
-				currentIdx = idx,
-				currentItem = items[idx],
+    function onEnter(items, idx) {
 
-				onAdjustSize = function () {
+        var currentItems = items;
+        var currentIdx = idx;
+        var currentItem = items[idx];
 
-					var $content = $('#pv-content'),
-						$vid = $('#pv-vid-video');
+        function onAdjustSize() {
 
-					if ($vid.length) {
+            var $content = $('#pv-content'),
+                $vid = $('#pv-vid-video');
 
-						$vid.css({
-							'left': '' + (($content.width()-$vid.width())*0.5) + 'px',
-							'top': '' + (($content.height()-$vid.height())*0.5) + 'px'
-						});
+            if ($vid.length) {
 
-						preview.setLabels([
-							currentItem.label,
-							'' + $vid[0].videoWidth + 'x' + $vid[0].videoHeight,
-							'' + (100 * $vid.width() / $vid[0].videoWidth).toFixed(0) + '%'
-						]);
-					}
-				},
+                $vid.css({
+                    'left': '' + (($content.width()-$vid.width())*0.5) + 'px',
+                    'top': '' + (($content.height()-$vid.height())*0.5) + 'px'
+                });
 
-				onIdxChange = function (rel) {
+                preview.setLabels([
+                    currentItem.label,
+                    '' + $vid[0].videoWidth + 'x' + $vid[0].videoHeight,
+                    '' + (100 * $vid.width() / $vid[0].videoWidth).toFixed(0) + '%'
+                ]);
+            }
+        }
 
-					currentIdx = (currentIdx + rel + currentItems.length) % currentItems.length;
-					currentItem = currentItems[currentIdx];
+        function onIdxChange(rel) {
 
-					var spinnerTimeout = setTimeout(function () { preview.showSpinner(true); }, 200);
+            currentIdx = (currentIdx + rel + currentItems.length) % currentItems.length;
+            currentItem = currentItems[currentIdx];
 
-					if ($('#pv-vid-video').length) {
-						$('#pv-vid-video')[0].pause();
-					}
-					preloadVid(currentItem.absHref, function ($preloaded_vid) {
+            var spinnerTimeout = setTimeout(function () { preview.showSpinner(true); }, 200);
 
-						clearTimeout(spinnerTimeout);
-						preview.showSpinner(false);
+            if ($('#pv-vid-video').length) {
+                $('#pv-vid-video')[0].pause();
+            }
+            preloadVid(currentItem.absHref, function ($preloaded_vid) {
 
-						$('#pv-content').fadeOut(100, function () {
+                clearTimeout(spinnerTimeout);
+                preview.showSpinner(false);
 
-							$('#pv-content').empty().append($preloaded_vid.attr('id', 'pv-vid-video')).fadeIn(200);
+                $('#pv-content').fadeOut(100, function () {
 
-							// small timeout, so $preloaded_vid is visible and therefore $preloaded_vid.width is available
-							setTimeout(function () {
-								onAdjustSize();
+                    $('#pv-content').empty().append($preloaded_vid.attr('id', 'pv-vid-video')).fadeIn(200);
 
-								preview.setIndex(currentIdx + 1, currentItems.length);
-								preview.setRawLink(currentItem.absHref);
-							}, 10);
-						});
-					});
-				};
+                    // small timeout, so $preloaded_vid is visible and therefore $preloaded_vid.width is available
+                    setTimeout(function () {
+                        onAdjustSize();
 
-			onIdxChange(0);
-			preview.setOnIndexChange(onIdxChange);
-			preview.setOnAdjustSize(onAdjustSize);
-			preview.enter();
-		},
+                        preview.setIndex(currentIdx + 1, currentItems.length);
+                        preview.setRawLink(currentItem.absHref);
+                    }, 10);
+                });
+            });
+        }
 
-		initItem = function (item) {
+        onIdxChange(0);
+        preview.setOnIndexChange(onIdxChange);
+        preview.setOnAdjustSize(onAdjustSize);
+        preview.enter();
+    }
 
-			if (item.$view && _.indexOf(settings.types, item.type) >= 0) {
-				item.$view.find('a').on('click', function (event) {
+    function initItem(item) {
 
-					event.preventDefault();
+        if (item.$view && _.indexOf(settings.types, item.type) >= 0) {
+            item.$view.find('a').on('click', function (event) {
 
-					var matchedEntries = _.compact(_.map($('#items .item'), function (item) {
+                event.preventDefault();
 
-						item = $(item).data('item');
-						return _.indexOf(settings.types, item.type) >= 0 ? item : null;
-					}));
+                var matchedEntries = _.compact(_.map($('#items .item'), function (item) {
 
-					onEnter(matchedEntries, _.indexOf(matchedEntries, item));
-				});
-			}
-		},
+                    item = $(item).data('item');
+                    return _.indexOf(settings.types, item.type) >= 0 ? item : null;
+                }));
 
-		onLocationChanged = function (item) {
+                onEnter(matchedEntries, _.indexOf(matchedEntries, item));
+            });
+        }
+    }
 
-			_.each(item.content, initItem);
-		},
+    function onLocationChanged(item) {
 
-		onLocationRefreshed = function (item, added, removed) {
+        _.each(item.content, initItem);
+    }
 
-			_.each(added, initItem);
-		},
+    function onLocationRefreshed(item, added, removed) {
 
-		init = function () {
+        _.each(added, initItem);
+    }
 
-			if (!settings.enabled) {
-				return;
-			}
+    function init() {
 
-			event.sub('location.changed', onLocationChanged);
-			event.sub('location.refreshed', onLocationRefreshed);
-		};
+        if (!settings.enabled) {
+            return;
+        }
 
-	init();
+        event.sub('location.changed', onLocationChanged);
+        event.sub('location.refreshed', onLocationRefreshed);
+    }
+
+
+    init();
 });

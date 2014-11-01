@@ -1,56 +1,52 @@
-
-// other libs
-// ----------
 // @include "lib/modernizr-*.js"
-// @include "lib/underscore-*.js"
-// @include "lib/markdown-*.js"
-// @include "lib/modulejs-*.js"
-// @include "lib/moment-*.js"
-
-// jQuery libs
-// -----------
 // @include "lib/jquery-*.js"
 // @include "lib/jquery.*.js"
+// @include "lib/lodash-*.js"
+// @include "lib/marked-*.js"
+// @include "lib/modulejs-*.js"
+// @include "lib/moment-*.js"
+// @include "lib/prism-*.js"
 
-// app
-// ---
 (function () {
-	'use strict';
+'use strict';
 
-	/*global jQuery, markdown, Modernizr, moment, _ */
-	modulejs.define('$', function () { return jQuery; });
-	modulejs.define('markdown', function () { return markdown; });
-	modulejs.define('modernizr', function () { return Modernizr; });
-	modulejs.define('moment', function () { return moment; });
-	modulejs.define('_', function () { return _; });
+    /*global jQuery, marked, Modernizr, moment, Prism, _ */
+    modulejs.define('$', function () { return jQuery; });
+    modulejs.define('marked', function () { return marked; });
+    modulejs.define('modernizr', function () { return Modernizr; });
+    modulejs.define('moment', function () { return moment; });
+    modulejs.define('prism', function () { return Prism; });
+    modulejs.define('_', function () { return _; });
 
-	// @include "inc/**/*.js"
+    // @include "inc/**/*.js"
 
-	var	$ = jQuery,
-		module = $('script[data-module]').data('module'),
-		url;
+    var $ = jQuery;
 
-	if ($('html').hasClass('no-browser')) {
-		return;
-	}
+    if ($('html').hasClass('no-browser')) {
+        return;
+    }
 
-	if (module === 'main') {
-		url = '.';
-	} else if (module === 'info') {
-		url = 'server/php/index.php';
-	} else {
-		return;
-	}
+    var module = $('script[data-module]').data('module');
+    var data = {action: 'get', setup: true, options: true, types: true, theme: true, langs: true};
+    var url;
 
-	$.ajax({
-		url: url,
-		data: {action: 'get', setup: true, options: true, types: true, theme: true, langs: true},
-		type: 'POST',
-		dataType: 'json'
-	}).done(function (config) {
+    if (module === 'main') {
+        url = '.';
+    } else if (module === 'info') {
+        data.updatecmds = true;
+        url = 'server/php/index.php';
+    } else {
+        return;
+    }
 
-		modulejs.define('config', config);
-		$(function () { modulejs.require(module); });
-	});
+    $.ajax({
+        url: url,
+        data: data,
+        type: 'POST',
+        dataType: 'json'
+    }).done(function (config) {
 
+        modulejs.define('config', config);
+        $(function () { modulejs.require(module); });
+    });
 }());

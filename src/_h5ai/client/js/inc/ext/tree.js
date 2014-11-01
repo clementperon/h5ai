@@ -1,236 +1,238 @@
-
 modulejs.define('ext/tree', ['_', '$', 'core/settings', 'core/resource', 'core/event', 'core/location'], function (_, $, allsettings, resource, event, location) {
 
-	var settings = _.extend({
-			enabled: false,
-			slide: true,
-			maxSubfolders: 50
-		}, allsettings.tree),
-
-		template = '<div class="item">' +
-						'<span class="indicator none">' +
-							'<img src="' + resource.image('tree') + '"/>' +
-						'</span>' +
-						'<a>' +
-							'<span class="icon"><img/></span>' +
-							'<span class="label"/>' +
-						'</a>' +
-					'</span>',
-		statusHintTemplate = '<span class="hint"/>',
-
-		update = function (item) {
-
-			var $html = $(template),
-				$indicator = $html.find('.indicator'),
-				$a = $html.find('a'),
-				$img = $html.find('.icon img'),
-				$label = $html.find('.label');
-
-			$html
-				.addClass(item.isFolder() ? 'folder' : 'file')
-				.data('item', item);
-
-			location.setLink($a, item);
-			$img.attr('src', resource.image('folder'));
-			$label.text(item.label);
-
-			if (item.isFolder()) {
-
-				var subfolders = item.getSubfolders();
-
-				// indicator
-				if ((item.isManaged && !item.isContentFetched) || subfolders.length) {
-
-					$indicator.removeClass('none');
-
-					if ((item.isManaged && !item.isContentFetched)) {
-						$indicator.addClass('unknown');
-					} else if (item.isContentVisible) {
-						$indicator.addClass('open');
-					} else {
-						$indicator.addClass('close');
-					}
-				}
-
-				// is it the domain?
-				if (item.isDomain()) {
-					$html.addClass('domain');
-					$img.attr('src', resource.image('home'));
-				}
-
-				// is it the root?
-				if (item.isRoot()) {
-					$html.addClass('root');
-					$img.attr('src', resource.image('home'));
-				}
-
-				// is it the current folder?
-				if (item.isCurrentFolder()) {
-					$html.addClass('current');
-					// $img.attr('src', resource.image('folder-open'));
-				}
-
-				// does it have subfolders?
-				if (subfolders.length) {
-					var $ul = $('<ul class="content"/>').appendTo($html),
-						counter = 0;
-					_.each(subfolders, function (e) {
-						counter += 1;
-						if (counter <= settings.maxSubfolders) {
-							$('<li/>').append(update(e)).appendTo($ul);
-						}
-					});
-					if (subfolders.length > settings.maxSubfolders) {
-						$('<li class="summary">… ' + (subfolders.length - settings.maxSubfolders) + ' more subfolders</li>').appendTo($ul);
-					}
-					if (!item.isContentVisible) {
-						$ul.hide();
-					}
-				}
-
-				// reflect folder status
-				if (!item.isManaged) {
-					$img.attr('src', resource.image('folder-page'));
-				}
-			}
+    var settings = _.extend({
+            enabled: false,
+            slide: true,
+            maxSubfolders: 50
+        }, allsettings.tree);
+    var template =
+            '<div class="item">' +
+                '<span class="indicator none">' +
+                    '<img src="' + resource.image('tree') + '"/>' +
+                '</span>' +
+                '<a>' +
+                    '<span class="icon"><img/></span>' +
+                    '<span class="label"/>' +
+                '</a>' +
+            '</span>';
+    var statusHintTemplate = '<span class="hint"/>';
 
 
-			if (item.$tree) {
-				item.$tree.replaceWith($html);
-			}
-			item.$tree = $html;
+    function update(item) {
 
-			return $html;
-		},
+        var $html = $(template);
+        var $indicator = $html.find('.indicator');
+        var $a = $html.find('a');
+        var $img = $html.find('.icon img');
+        var $label = $html.find('.label');
 
-		createOnIndicatorClick = function () {
+        $html
+            .addClass(item.isFolder() ? 'folder' : 'file')
+            .data('item', item);
 
-			var $tree = $('#tree'),
-				slide = function (item, $indicator, $content, down) {
+        location.setLink($a, item);
+        $img.attr('src', resource.image('folder'));
+        $label.text(item.label);
 
-					item.isContentVisible = down;
-					$indicator.removeClass('open close').addClass(down ? 'open' : 'close');
-					$tree.scrollpanel('update', true);
-					$content[down ? 'slideDown' : 'slideUp'](function () {
+        if (item.isFolder()) {
 
-						$tree.scrollpanel('update');
-					});
-				};
+            var subfolders = item.getSubfolders();
 
-			return function () {
+            // indicator
+            if ((item.isManaged && !item.isContentFetched) || subfolders.length) {
 
-				var $indicator = $(this),
-					$item = $indicator.closest('.item'),
-					item = $item.data('item'),
-					$content = $item.find('> ul.content');
+                $indicator.removeClass('none');
 
-				if ($indicator.hasClass('unknown')) {
+                if ((item.isManaged && !item.isContentFetched)) {
+                    $indicator.addClass('unknown');
+                } else if (item.isContentVisible) {
+                    $indicator.addClass('open');
+                } else {
+                    $indicator.addClass('close');
+                }
+            }
 
-					item.fetchContent(function (item) {
+            // is it the domain?
+            if (item.isDomain()) {
+                $html.addClass('domain');
+                $img.attr('src', resource.image('home'));
+            }
 
-						item.isContentVisible = false;
+            // is it the root?
+            if (item.isRoot()) {
+                $html.addClass('root');
+                $img.attr('src', resource.image('home'));
+            }
 
-						var $item = update(item),
-							$indicator = $item.find('> .indicator'),
-							$content = $item.find('> ul.content');
+            // is it the current folder?
+            if (item.isCurrentFolder()) {
+                $html.addClass('current');
+                // $img.attr('src', resource.image('folder-open'));
+            }
 
-						if (!$indicator.hasClass('none')) {
-							slide(item, $indicator, $content, true);
-						}
-					});
+            // does it have subfolders?
+            if (subfolders.length) {
+                var $ul = $('<ul class="content"/>').appendTo($html),
+                    counter = 0;
+                _.each(subfolders, function (e) {
+                    counter += 1;
+                    if (counter <= settings.maxSubfolders) {
+                        $('<li/>').append(update(e)).appendTo($ul);
+                    }
+                });
+                if (subfolders.length > settings.maxSubfolders) {
+                    $('<li class="summary">… ' + (subfolders.length - settings.maxSubfolders) + ' more subfolders</li>').appendTo($ul);
+                }
+                if (!item.isContentVisible) {
+                    $ul.hide();
+                }
+            }
 
-				} else if ($indicator.hasClass('open')) {
+            // reflect folder status
+            if (!item.isManaged) {
+                $img.attr('src', resource.image('folder-page'));
+            }
+        }
 
-					slide(item, $indicator, $content, false);
 
-				} else if ($indicator.hasClass('close'))  {
+        if (item.$tree) {
+            item.$tree.replaceWith($html);
+        }
+        item.$tree = $html;
 
-					slide(item, $indicator, $content, true);
-				}
-			};
-		},
+        return $html;
+    }
 
-		shiftTree = function (forceVisible, dontAnimate) {
+    function createOnIndicatorClick() {
 
-			var $tree = $("#tree"),
-				$view = $("#view"),
-				left = ((settings.slide && $tree.outerWidth() < $view.offset().left) || forceVisible || !$view.is(':visible')) ? 0 : 18 - $tree.outerWidth();
+        var $tree = $('#tree');
 
-			if (dontAnimate) {
-				$tree.stop().css({ left: left });
-			} else {
-				$tree.stop().animate({ left: left });
-			}
-		},
+        function slide(item, $indicator, $content, down) {
 
-		fetchTree = function (item, callback) {
+            item.isContentVisible = down;
+            $indicator.removeClass('open close').addClass(down ? 'open' : 'close');
+            $tree.scrollpanel('update', true);
+            $content[down ? 'slideDown' : 'slideUp'](function () {
 
-			item.isContentVisible = true;
-			item.fetchContent(function (item) {
+                $tree.scrollpanel('update');
+            });
+        }
 
-				if (item.parent) {
-					fetchTree(item.parent, callback);
-				} else {
-					callback(item);
-				}
-			});
-		},
+        return function () {
 
-		adjustSpacing = function () {
+            var $indicator = $(this);
+            var $item = $indicator.closest('.item');
+            var item = $item.data('item');
+            var $content = $item.find('> ul.content');
 
-			var $tree = $('#tree'),
-				winHeight = $(window).height(),
-				navHeight = $('#topbar').outerHeight(),
-				footerHeight = $('#bottombar').outerHeight();
+            if ($indicator.hasClass('unknown')) {
 
-			$tree.css({
-				top: navHeight,
-				height: winHeight - navHeight - footerHeight - 16
-			});
+                item.fetchContent(function (item) {
 
-			$tree.scrollpanel('update');
-		},
+                    item.isContentVisible = false;
 
-		onLocationChanged = function (item) {
+                    var $item = update(item);
+                    var $indicator = $item.find('> .indicator');
+                    var $content = $item.find('> ul.content');
 
-			fetchTree(item, function (root) {
+                    if (!$indicator.hasClass('none')) {
+                        slide(item, $indicator, $content, true);
+                    }
+                });
 
-				$('#tree')
-					.find('.sp-container').append(update(root)).end()
-					.show();
-				adjustSpacing();
-				shiftTree(false, true);
-			});
-		},
+            } else if ($indicator.hasClass('open')) {
 
-		init = function () {
+                slide(item, $indicator, $content, false);
 
-			if (!settings.enabled) {
-				return;
-			}
+            } else if ($indicator.hasClass('close'))  {
 
-			var $tree = $('<div id="tree"/>')
-				.appendTo('body')
-				.scrollpanel()
-				.on('click', '.indicator', createOnIndicatorClick())
-				.on('mouseenter', function () {
+                slide(item, $indicator, $content, true);
+            }
+        };
+    }
 
-					shiftTree(true);
-				})
-				.on('mouseleave', function () {
+    function shiftTree(forceVisible, dontAnimate) {
 
-					shiftTree();
-				});
+        var $tree = $("#tree");
+        var $view = $("#view");
+        var left = ((settings.slide && $tree.outerWidth() < $view.offset().left) || forceVisible || !$view.is(':visible')) ? 0 : 18 - $tree.outerWidth();
 
-			event.sub('ready', adjustSpacing);
-			event.sub('location.changed', onLocationChanged);
+        if (dontAnimate) {
+            $tree.stop().css({ left: left });
+        } else {
+            $tree.stop().animate({ left: left });
+        }
+    }
 
-			$(window).on('resize', function () {
+    function fetchTree(item, callback) {
 
-				adjustSpacing();
-				shiftTree();
-			});
-		};
+        item.isContentVisible = true;
+        item.fetchContent(function (item) {
 
-	init();
+            if (item.parent) {
+                fetchTree(item.parent, callback);
+            } else {
+                callback(item);
+            }
+        });
+    }
+
+    function adjustSpacing() {
+
+        var $tree = $('#tree');
+        var winHeight = $(window).height();
+        var navHeight = $('#topbar').outerHeight();
+        var footerHeight = $('#bottombar').outerHeight();
+
+        $tree.css({
+            top: navHeight,
+            height: winHeight - navHeight - footerHeight - 16
+        });
+
+        $tree.scrollpanel('update');
+    }
+
+    function onLocationChanged(item) {
+
+        fetchTree(item, function (root) {
+
+            $('#tree')
+                .find('.sp-container').append(update(root)).end()
+                .show();
+            adjustSpacing();
+            shiftTree(false, true);
+        });
+    }
+
+    function init() {
+
+        if (!settings.enabled) {
+            return;
+        }
+
+        var $tree = $('<div id="tree"/>')
+                        .appendTo('body')
+                        .scrollpanel()
+                        .on('click', '.indicator', createOnIndicatorClick())
+                        .on('mouseenter', function () {
+
+                            shiftTree(true);
+                        })
+                        .on('mouseleave', function () {
+
+                            shiftTree();
+                        });
+
+        event.sub('ready', adjustSpacing);
+        event.sub('location.changed', onLocationChanged);
+
+        $(window).on('resize', function () {
+
+            adjustSpacing();
+            shiftTree();
+        });
+    }
+
+
+    init();
 });

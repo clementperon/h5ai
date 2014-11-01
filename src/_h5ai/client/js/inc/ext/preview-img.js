@@ -1,124 +1,125 @@
-
 modulejs.define('ext/preview-img', ['_', '$', 'core/settings', 'core/event', 'ext/preview'], function (_, $, allsettings, event, preview) {
 
-	var settings = _.extend({
-			enabled: false,
-			types: []
-		}, allsettings['preview-img']),
+    var settings = _.extend({
+            enabled: false,
+            types: []
+        }, allsettings['preview-img']);
 
-		preloadImg = function (src, callback) {
 
-			var $img = $('<img/>')
-				.one('load', function () {
+    function preloadImg(src, callback) {
 
-					callback($img);
-					// setTimeout(function () { callback($img); }, 1000); // for testing
-				})
-				.attr('src', src);
-		},
+        var $img = $('<img/>')
+                        .one('load', function () {
 
-		onEnter = function (items, idx) {
+                            callback($img);
+                            // setTimeout(function () { callback($img); }, 1000); // for testing
+                        })
+                        .attr('src', src);
+    }
 
-			var currentItems = items,
-				currentIdx = idx,
-				currentItem = items[idx],
+    function onEnter(items, idx) {
 
-				onAdjustSize = function () {
+        var currentItems = items;
+        var currentIdx = idx;
+        var currentItem = items[idx];
 
-					var $content = $('#pv-content'),
-						$img = $('#pv-img-image');
+        function onAdjustSize() {
 
-					if ($img.length) {
+            var $content = $('#pv-content');
+            var $img = $('#pv-img-image');
 
-						$img.css({
-							'left': '' + (($content.width()-$img.width())*0.5) + 'px',
-							'top': '' + (($content.height()-$img.height())*0.5) + 'px'
-						});
+            if ($img.length) {
 
-						preview.setLabels([
-							currentItem.label,
-							'' + $img[0].naturalWidth + 'x' + $img[0].naturalHeight,
-							'' + (100 * $img.width() / $img[0].naturalWidth).toFixed(0) + '%'
-						]);
-					}
-				},
+                $img.css({
+                    'left': '' + (($content.width()-$img.width())*0.5) + 'px',
+                    'top': '' + (($content.height()-$img.height())*0.5) + 'px'
+                });
 
-				onIdxChange = function (rel) {
+                preview.setLabels([
+                    currentItem.label,
+                    '' + $img[0].naturalWidth + 'x' + $img[0].naturalHeight,
+                    '' + (100 * $img.width() / $img[0].naturalWidth).toFixed(0) + '%'
+                ]);
+            }
+        }
 
-					currentIdx = (currentIdx + rel + currentItems.length) % currentItems.length;
-					currentItem = currentItems[currentIdx];
+        function onIdxChange(rel) {
 
-					var spinnerTimeout = setTimeout(function () { preview.showSpinner(true); }, 200);
+            currentIdx = (currentIdx + rel + currentItems.length) % currentItems.length;
+            currentItem = currentItems[currentIdx];
 
-					preloadImg(currentItem.absHref, function ($preloaded_img) {
+            var spinnerTimeout = setTimeout(function () { preview.showSpinner(true); }, 200);
 
-						clearTimeout(spinnerTimeout);
-						preview.showSpinner(false);
+            preloadImg(currentItem.absHref, function ($preloaded_img) {
 
-						$('#pv-content').fadeOut(100, function () {
+                clearTimeout(spinnerTimeout);
+                preview.showSpinner(false);
 
-							$('#pv-content').empty().append($preloaded_img.attr('id', 'pv-img-image')).fadeIn(200);
+                $('#pv-content').fadeOut(100, function () {
 
-							// small timeout, so $preloaded_img is visible and therefore $preloaded_img.width is available
-							setTimeout(function () {
+                    $('#pv-content').empty().append($preloaded_img.attr('id', 'pv-img-image')).fadeIn(200);
 
-								onAdjustSize();
+                    // small timeout, so $preloaded_img is visible and therefore $preloaded_img.width is available
+                    setTimeout(function () {
 
-								preview.setIndex(currentIdx + 1, currentItems.length);
-								preview.setLabels([
-									currentItem.label,
-									'' + $preloaded_img[0].naturalWidth + 'x' + $preloaded_img[0].naturalHeight,
-									'' + (100 * $preloaded_img.width() / $preloaded_img[0].naturalWidth).toFixed(0) + '%'
-								]);
-								preview.setRawLink(currentItem.absHref);
-							}, 10);
-						});
-					});
-				};
+                        onAdjustSize();
 
-			onIdxChange(0);
-			preview.setOnIndexChange(onIdxChange);
-			preview.setOnAdjustSize(onAdjustSize);
-			preview.enter();
-		},
+                        preview.setIndex(currentIdx + 1, currentItems.length);
+                        preview.setLabels([
+                            currentItem.label,
+                            '' + $preloaded_img[0].naturalWidth + 'x' + $preloaded_img[0].naturalHeight,
+                            '' + (100 * $preloaded_img.width() / $preloaded_img[0].naturalWidth).toFixed(0) + '%'
+                        ]);
+                        preview.setRawLink(currentItem.absHref);
+                    }, 10);
+                });
+            });
+        }
 
-		initItem = function (item) {
+        onIdxChange(0);
+        preview.setOnIndexChange(onIdxChange);
+        preview.setOnAdjustSize(onAdjustSize);
+        preview.enter();
+    }
 
-			if (item.$view && _.indexOf(settings.types, item.type) >= 0) {
-				item.$view.find('a').on('click', function (event) {
+    function initItem(item) {
 
-					event.preventDefault();
+        if (item.$view && _.indexOf(settings.types, item.type) >= 0) {
+            item.$view.find('a').on('click', function (event) {
 
-					var matchedEntries = _.compact(_.map($('#items .item'), function (item) {
+                event.preventDefault();
 
-						item = $(item).data('item');
-						return _.indexOf(settings.types, item.type) >= 0 ? item : null;
-					}));
+                var matchedEntries = _.compact(_.map($('#items .item'), function (item) {
 
-					onEnter(matchedEntries, _.indexOf(matchedEntries, item));
-				});
-			}
-		},
+                    item = $(item).data('item');
+                    return _.indexOf(settings.types, item.type) >= 0 ? item : null;
+                }));
 
-		onLocationChanged = function (item) {
+                onEnter(matchedEntries, _.indexOf(matchedEntries, item));
+            });
+        }
+    }
 
-			_.each(item.content, initItem);
-		},
+    function onLocationChanged(item) {
 
-		onLocationRefreshed = function (item, added, removed) {
+        _.each(item.content, initItem);
+    }
 
-			_.each(added, initItem);
-		},
+    function onLocationRefreshed(item, added, removed) {
 
-		init = function () {
+        _.each(added, initItem);
+    }
 
-			if (!settings.enabled) {
-				return;
-			}
+    function init() {
 
-			event.sub('location.changed', onLocationChanged);
-			event.sub('location.refreshed', onLocationRefreshed);
-		};
+        if (!settings.enabled) {
+            return;
+        }
 
-	init();
+        event.sub('location.changed', onLocationChanged);
+        event.sub('location.refreshed', onLocationRefreshed);
+    }
+
+
+    init();
 });

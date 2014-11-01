@@ -1,142 +1,139 @@
-
 modulejs.define('ext/l10n', ['_', '$', 'core/settings', 'core/langs', 'core/format', 'core/store', 'core/event', 'core/server'], function (_, $, allsettings, langs, format, store, event, server) {
 
-	var settings = _.extend({
-			enabled: false,
-			lang: 'en',
-			useBrowserLang: true
-		}, allsettings.l10n),
+    var settings = _.extend({
+            enabled: false,
+            lang: 'en',
+            useBrowserLang: true
+        }, allsettings.l10n);
+    var defaultTranslations = {
+            isoCode: 'en',
+            lang: 'english',
+            details: 'details',
+            grid: 'grid',
+            icons: 'icons',
+            name: 'Name',
+            lastModified: 'Last modified',
+            size: 'Size',
+            parentDirectory: 'Parent Directory',
+            empty: 'empty',
+            folders: 'folders',
+            files: 'files',
+            download: 'download',
+            noMatch: 'no match',
+            dateFormat: 'YYYY-MM-DD HH:mm',
+            filter: 'filter',
+            view: 'View',
+            language: 'Language'
+        };
+    var blockTemplate = '<div class="block"><h1 class="l10n-language">Language</h1><div class="select"><select id="langs"/></div></div>';
+    var optionTemplate = '<option/>';
+    var storekey = 'ext/l10n';
+    var loaded = {
+            en: _.extend({}, defaultTranslations)
+        };
+    var currentLang = loaded.en;
 
-		defaultTranslations = {
-			isoCode: 'en',
-			lang: 'english',
-			details: 'details',
-			list: 'list',
-			grid: 'grid',
-			icons: 'icons',
-			name: 'Name',
-			lastModified: 'Last modified',
-			size: 'Size',
-			parentDirectory: 'Parent Directory',
-			empty: 'empty',
-			folders: 'folders',
-			files: 'files',
-			download: 'download',
-			noMatch: 'no match',
-			dateFormat: 'YYYY-MM-DD HH:mm',
-			filter: 'filter',
-			'delete': 'delete'
-		},
 
-		blockTemplate = '<div class="block"><div class="select"><select id="langs"/></div></div>',
-		optionTemplate = '<option/>',
+    function update(lang) {
 
-		storekey = 'ext/l10n',
+        if (lang) {
+            currentLang = lang;
+        }
 
-		loaded = {
-			en: _.extend({}, defaultTranslations)
-		},
-		currentLang = loaded.en,
+        $('#langs option')
+            .removeAttr('selected').removeProp('selected')
+            .filter('.' + currentLang.isoCode)
+            .attr('selected', 'selected').prop('selected', 'selected');
 
-		update = function (lang) {
+        $.each(currentLang, function (key, value) {
+            $('.l10n-' + key).text(value);
+        });
+        format.setDefaultDateFormat(currentLang.dateFormat);
 
-			if (lang) {
-				currentLang = lang;
-			}
+        $('#items .item .date').each(function () {
 
-			$('#langs option')
-				.removeAttr('selected').removeProp('selected')
-				.filter('.' + currentLang.isoCode)
-				.attr('selected', 'selected').prop('selected', 'selected');
+            var $this = $(this);
 
-			$.each(currentLang, function (key, value) {
-				$('.l10n-' + key).text(value);
-			});
-			format.setDefaultDateFormat(currentLang.dateFormat);
+            $this.text(format.formatDate($this.data('time')));
+        });
 
-			$('#items .item .date').each(function () {
+        $('#filter input').attr('placeholder', currentLang.filter);
+    }
 
-				var $this = $(this);
+    function loadLanguage(isoCode, callback) {
 
-				$this.text(format.formatDate($this.data('time')));
-			});
+        if (loaded[isoCode]) {
 
-			$('#filter input').attr('placeholder', currentLang.filter);
-		},
+            callback(loaded[isoCode]);
+        } else {
 
-		loadLanguage = function (isoCode, callback) {
+            server.request({action: 'get', l10n: true, l10nCodes: isoCode}, function (response) {
 
-			if (loaded[isoCode]) {
+                var json = response.l10n && response.l10n[isoCode] ? response.l10n[isoCode] : {};
+                loaded[isoCode] = _.extend({}, defaultTranslations, json, {isoCode: isoCode});
+                callback(loaded[isoCode]);
+            });
+        }
+    }
 
-				callback(loaded[isoCode]);
-			} else {
+    function localize(langs, isoCode, useBrowserLang) {
 
-				server.request({action: 'get', l10n: true, l10nCodes: isoCode}, function (response) {
+        var storedIsoCode = store.get(storekey);
 
-					var json = response.l10n && response.l10n[isoCode] ? response.l10n[isoCode] : {};
-					loaded[isoCode] = _.extend({}, defaultTranslations, json, {isoCode: isoCode});
-					callback(loaded[isoCode]);
-				});
-			}
-		},
+        if (langs[storedIsoCode]) {
+            isoCode = storedIsoCode;
+        } else if (useBrowserLang) {
+            var browserLang = navigator.language || navigator.browserLanguage;
+            if (browserLang) {
+                if (langs[browserLang]) {
+                    isoCode = browserLang;
+                } else if (browserLang.length > 2 && langs[browserLang.substr(0, 2)]) {
+                    isoCode = browserLang.substr(0, 2);
+                }
+            }
+        }
 
-		localize = function (langs, isoCode, useBrowserLang) {
+        if (!langs[isoCode]) {
+            isoCode = 'en';
+        }
 
-			var storedIsoCode = store.get(storekey);
+        loadLanguage(isoCode, update);
+    }
 
-			if (langs[storedIsoCode]) {
-				isoCode = storedIsoCode;
-			} else if (useBrowserLang) {
-				var browserLang = navigator.language || navigator.browserLanguage;
-				if (browserLang) {
-					if (langs[browserLang]) {
-						isoCode = browserLang;
-					} else if (browserLang.length > 2 && langs[browserLang.substr(0, 2)]) {
-						isoCode = browserLang.substr(0, 2);
-					}
-				}
-			}
+    function initLangSelector(langs) {
 
-			if (!langs[isoCode]) {
-				isoCode = 'en';
-			}
+        var isoCodes = _.keys(langs).sort();
+        var $block = $(blockTemplate);
+        var $select = $block.find('select')
+                .on('change', function (event) {
+                    var isoCode = event.target.value;
+                    store.put(storekey, isoCode);
+                    localize(langs, isoCode, false);
+                });
 
-			loadLanguage(isoCode, update);
-		},
+        $.each(isoCodes, function (idx, isoCode) {
+            $(optionTemplate)
+                .attr('value', isoCode)
+                .addClass(isoCode)
+                .text(isoCode + ' - ' + (_.isString(langs[isoCode]) ? langs[isoCode] : langs[isoCode].lang))
+                .appendTo($select);
+        });
 
-		initLangSelector = function (langs) {
+        $block.appendTo('#settings');
+    }
 
-			var isoCodes = _.keys(langs).sort(),
-				$block = $(blockTemplate),
-				$select = $block.find('select')
-					.on('change', function (event) {
-						var isoCode = event.target.value;
-						store.put(storekey, isoCode);
-						localize(langs, isoCode, false);
-					});
+    function init() {
 
-			$.each(isoCodes, function (idx, isoCode) {
-				$(optionTemplate)
-					.attr('value', isoCode)
-					.addClass(isoCode)
-					.text(isoCode + ' - ' + (_.isString(langs[isoCode]) ? langs[isoCode] : langs[isoCode].lang))
-					.appendTo($select);
-			});
+        if (settings.enabled) {
+            initLangSelector(langs);
+        }
 
-			$block.appendTo('#settings');
-		},
+        event.sub('location.changed', function () {
 
-		init = function () {
+            localize(langs, settings.lang, settings.useBrowserLang);
+        });
+    }
 
-			if (settings.enabled) {
-				initLangSelector(langs);
-			}
 
-			event.sub('location.changed', function () {
-
-				localize(langs, settings.lang, settings.useBrowserLang);
-			});
-		};
-
-	init();
+    init();
 });

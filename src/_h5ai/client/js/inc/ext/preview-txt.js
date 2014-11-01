@@ -1,188 +1,138 @@
+modulejs.define('ext/preview-txt', ['_', '$', 'marked', 'prism', 'core/settings', 'core/event', 'ext/preview'], function (_, $, marked, prism, allsettings, event, preview) {
 
-modulejs.define('ext/preview-txt', ['_', '$', 'markdown', 'core/settings', 'core/event', 'core/resource', 'ext/preview'], function (_, $, markdown, allsettings, event, resource, preview) {
+    var settings = _.extend({
+            enabled: false,
+            types: {}
+        }, allsettings['preview-txt']);
+    var templateText = '<pre id="pv-txt-text" class="highlighted"/>';
+    var templateMarkdown = '<div id="pv-txt-text" class="markdown"/>';
 
-	var settings = _.extend({
-			enabled: false,
-			types: {}
-		}, allsettings['preview-txt']),
 
-		templateText = '<pre id="pv-txt-text" class="highlighted"/>',
-		templateMarkdown = '<div id="pv-txt-text" class="markdown"/>',
+    function preloadText(absHref, callback) {
 
-		// adapted from SyntaxHighlighter
-		getHighlightedLines = function (sh, alias, content) {
+        $.ajax({
+                url: absHref,
+                dataType: 'text'
+            })
+            .done(function (content) {
 
-			var brushes = sh.vars.discoveredBrushes,
-				Brush, brush;
+                callback(content);
+                // setTimeout(function () { callback(content); }, 1000); // for testing
+            })
+            .fail(function (jqXHR, textStatus, errorThrown) {
 
-			if (!brushes) {
-				brushes = {};
+                callback('[ajax error] ' + textStatus);
+            });
+    }
 
-				_.each(sh.brushes, function (info, brush) {
+    function onEnter(items, idx) {
 
-					var aliases = info.aliases;
+        var currentItems = items;
+        var currentIdx = idx;
+        var currentItem = items[idx];
 
-					if (aliases) {
-						info.brushName = brush.toLowerCase();
+        function onAdjustSize() {
 
-						for (var i = 0; i < aliases.length; i += 1) {
-							brushes[aliases[i]] = brush;
-						}
-					}
-				});
+            var $content = $('#pv-content');
+            var $text = $('#pv-txt-text');
 
-				sh.vars.discoveredBrushes = brushes;
-			}
+            if ($text.length) {
 
-			Brush = sh.brushes[brushes[alias || 'plain']];
+                $text.height($content.height() - 16);
+            }
+        }
 
-			if (!Brush) {
-				return $();
-			}
+        function onIdxChange(rel) {
 
-			brush = new Brush();
-			brush.init({toolbar: false, gutter: false});
+            currentIdx = (currentIdx + rel + currentItems.length) % currentItems.length;
+            currentItem = currentItems[currentIdx];
 
-			return $(brush.getHtml(content)).find('.line');
-		},
+            var spinnerTimeout = setTimeout(function () { preview.showSpinner(true); }, 200);
 
-		preloadText = function (absHref, callback) {
+            preloadText(currentItem.absHref, function (textContent) {
 
-			$.ajax({
-					url: absHref,
-					dataType: 'text'
-				})
-				.done(function (content) {
+                clearTimeout(spinnerTimeout);
+                preview.showSpinner(false);
 
-					callback(content);
-					// setTimeout(function () { callback(content); }, 1000); // for testing
-				})
-				.fail(function (jqXHR, textStatus, errorThrown) {
+                $('#pv-content').fadeOut(100, function () {
 
-					callback('[ajax error] ' + textStatus);
-				});
-		},
+                    var type = settings.types[currentItem.type];
+                    var $text, $code;
 
-		onEnter = function (items, idx) {
+                    if (type === 'none') {
+                        $text = $(templateMarkdown).text(textContent);
+                    } else if (type === 'fixed') {
+                        $text = $(templateText).text(textContent);
+                    } else if (type === 'markdown') {
+                        $text = $(templateMarkdown).html(marked(textContent));
+                    } else {
+                        $text = $(templateText);
+                        $code = $('<code/>').appendTo($text);
 
-			var currentItems = items,
-				currentIdx = idx,
-				currentItem = items[idx],
+                        if (textContent.length < 20000) {
+                            $code.empty().html(prism.highlight(textContent, prism.languages[type]));
+                        } else {
+                            $code.empty().text(textContent);
+                            setTimeout(function () { $code.empty().html(prism.highlight(textContent, prism.languages[type])); }, 300);
+                        }
+                    }
+                    $('#pv-content').empty().append($text).fadeIn(200);
+                    onAdjustSize();
 
-				onAdjustSize = function () {
+                    preview.setIndex(currentIdx + 1, currentItems.length);
+                    preview.setLabels([
+                        currentItem.label,
+                        '' + currentItem.size + ' bytes'
+                    ]);
+                    preview.setRawLink(currentItem.absHref);
+                });
+            });
+        }
 
-					var $content = $('#pv-content'),
-						$text = $('#pv-txt-text');
+        onIdxChange(0);
+        preview.setOnIndexChange(onIdxChange);
+        preview.setOnAdjustSize(onAdjustSize);
+        preview.enter();
+    }
 
-					if ($text.length) {
+    function initItem(item) {
 
-						$text.height($content.height() - 16);
-					}
-				},
+        if (item.$view && _.indexOf(_.keys(settings.types), item.type) >= 0) {
+            item.$view.find('a').on('click', function (event) {
 
-				onIdxChange = function (rel) {
+                event.preventDefault();
 
-					currentIdx = (currentIdx + rel + currentItems.length) % currentItems.length;
-					currentItem = currentItems[currentIdx];
+                var matchedEntries = _.compact(_.map($('#items .item'), function (item) {
 
-					var spinnerTimeout = setTimeout(function () { preview.showSpinner(true); }, 200);
+                    item = $(item).data('item');
+                    return _.indexOf(_.keys(settings.types), item.type) >= 0 ? item : null;
+                }));
 
-					preloadText(currentItem.absHref, function (textContent) {
+                onEnter(matchedEntries, _.indexOf(matchedEntries, item));
+            });
+        }
+    }
 
-						clearTimeout(spinnerTimeout);
-						preview.showSpinner(false);
+    function onLocationChanged(item) {
 
-						$('#pv-content').fadeOut(100, function () {
+        _.each(item.content, initItem);
+    }
 
-							var $text;
+    function onLocationRefreshed(item, added, removed) {
 
-							if (settings.types[currentItem.type] === 'none') {
+        _.each(added, initItem);
+    }
 
-								$text = $(templateMarkdown).text(textContent);
+    function init() {
 
-							} else if (settings.types[currentItem.type] === 'fixed') {
+        if (!settings.enabled) {
+            return;
+        }
 
-								$text = $(templateText).text(textContent);
+        event.sub('location.changed', onLocationChanged);
+        event.sub('location.refreshed', onLocationRefreshed);
+    }
 
-							} else if (settings.types[currentItem.type] === 'markdown') {
 
-								$text = $(templateMarkdown).html(markdown.toHTML(textContent));
-							} else {
-
-								$text = $(templateText).text(textContent);
-
-								resource.ensureSH(function (sh) {
-
-									if (sh) {
-										var $table = $('<table/>');
-
-										getHighlightedLines(sh, settings.types[currentItem.type], textContent).each(function (i) {
-											$('<tr/>')
-												.append($('<td/>').addClass('nr').append(i + 1))
-												.append($('<td/>').addClass('line').append(this))
-												.appendTo($table);
-										});
-
-										$text.empty().append($table);
-									}
-								});
-							}
-							$('#pv-content').empty().append($text).fadeIn(200);
-							onAdjustSize();
-
-							preview.setIndex(currentIdx + 1, currentItems.length);
-							preview.setLabels([
-								currentItem.label,
-								'' + currentItem.size + ' bytes'
-							]);
-							preview.setRawLink(currentItem.absHref);
-						});
-					});
-				};
-
-			onIdxChange(0);
-			preview.setOnIndexChange(onIdxChange);
-			preview.setOnAdjustSize(onAdjustSize);
-			preview.enter();
-		},
-
-		initItem = function (item) {
-
-			if (item.$view && _.indexOf(_.keys(settings.types), item.type) >= 0) {
-				item.$view.find('a').on('click', function (event) {
-
-					event.preventDefault();
-
-					var matchedEntries = _.compact(_.map($('#items .item'), function (item) {
-
-						item = $(item).data('item');
-						return _.indexOf(_.keys(settings.types), item.type) >= 0 ? item : null;
-					}));
-
-					onEnter(matchedEntries, _.indexOf(matchedEntries, item));
-				});
-			}
-		},
-
-		onLocationChanged = function (item) {
-
-			_.each(item.content, initItem);
-		},
-
-		onLocationRefreshed = function (item, added, removed) {
-
-			_.each(added, initItem);
-		},
-
-		init = function () {
-
-			if (!settings.enabled) {
-				return;
-			}
-
-			event.sub('location.changed', onLocationChanged);
-			event.sub('location.refreshed', onLocationRefreshed);
-		};
-
-	init();
+    init();
 });

@@ -1,180 +1,208 @@
-
 modulejs.define('ext/select', ['_', '$', 'core/settings', 'core/resource', 'core/event'], function (_, $, allsettings, resource, event) {
 
-	var settings = _.extend({
-			enabled: false,
-			checkboxes: false
-		}, allsettings.select),
+    var settings = _.extend({
+            enabled: false,
+            checkboxes: false
+        }, allsettings.select);
+    var template = '<span class="selector"><img src="' + resource.image('selected') + '" alt="selected"/></span>';
+    var x = 0, y = 0;
+    var l = 0, t = 0, w = 0, h = 0;
+    var shrink = 1/3;
+    var $document = $(document);
+    var $selectionRect = $('<div id="selection-rect"/>');
 
-		template = '<span class="selector"><img src="' + resource.image('selected') + '" alt="selected"/></span>',
 
-		x = 0, y = 0,
-		l = 0, t = 0, w = 0, h = 0,
-		shrink = 1/3,
-		$document = $(document),
-		$selectionRect = $('<div id="selection-rect"/>'),
+    function publish() {
 
-		publish = function () {
+        var items = _.map($('#items .item.selected'), function (itemElement) {
 
-			var items = _.map($('#items .item.selected'), function (itemElement) {
+                return $(itemElement).data('item');
+            });
 
-				return $(itemElement).data('item');
-			});
+        event.pub('selection', items);
+    }
 
-			event.pub('selection', items);
-		},
+    function elementRect($element) {
 
-		selectionUpdate = function (event) {
+        if (!$element.is(':visible')) {
+            return null;
+        }
 
-			l = Math.min(x, event.pageX);
-			t = Math.min(y, event.pageY);
-			w = Math.abs(x - event.pageX);
-			h = Math.abs(y - event.pageY);
+        var offset = $element.offset();
+        var l = offset.left;
+        var t = offset.top;
+        var w = $element.outerWidth();
+        var h = $element.outerHeight();
+        return {l: l, t: t, w: w, h: h, r: l + w, b: t + h};
+    }
 
-			event.preventDefault();
-			$selectionRect
-				.stop(true, true)
-				.css({left: l, top: t, width: w, height: h, opacity: 1})
-				.show();
+    function doOverlap(rect1, rect2) {
 
-			var selRect = $selectionRect.fracs('rect');
-			$('#items .item').removeClass('selecting').each(function () {
+        if (!rect1 || !rect2) {
+            return false;
+        }
 
-				var $item = $(this),
-					rect = $item.find('a').fracs('rect'),
-					inter = selRect.intersection(rect);
-				if (inter && !$item.hasClass('folder-parent')) {
-					$item.addClass('selecting');
-				}
-			});
-		},
+        var left = Math.max(rect1.l, rect2.l);
+        var right = Math.min(rect1.r, rect2.r);
+        var top = Math.max(rect1.t, rect2.t);
+        var bottom = Math.min(rect1.b, rect2.b);
+        var width = right - left;
+        var height = bottom - top;
 
-		selectionEnd = function (event) {
+        return (width >= 0 && height >= 0);
+    }
 
-			event.preventDefault();
-			$document.off('mousemove', selectionUpdate);
-			$('#items .item.selecting.selected').removeClass('selecting').removeClass('selected');
-			$('#items .item.selecting').removeClass('selecting').addClass('selected');
-			publish();
+    function selectionUpdate(ev) {
 
-			$selectionRect
-				.stop(true, true)
-				.animate(
-					{
-						left: l + w * 0.5 * shrink,
-						top: t + h * 0.5 * shrink,
-						width: w * (1 - shrink),
-						height: h * (1 - shrink),
-						opacity: 0
-					},
-					300,
-					function () {
-						$selectionRect.hide();
-					}
-				);
-		},
+        l = Math.min(x, ev.pageX);
+        t = Math.min(y, ev.pageY);
+        w = Math.abs(x - ev.pageX);
+        h = Math.abs(y - ev.pageY);
 
-		selectionStart = function (event) {
+        ev.preventDefault();
+        $selectionRect
+            .stop(true, true)
+            .css({left: l, top: t, width: w, height: h, opacity: 1})
+            .show();
 
-			var $window = $(window),
-				viewRight = $window.scrollLeft() + $window.width(),
-				viewBottom = $window.scrollTop() + $window.height();
+        var selRect = elementRect($selectionRect);
+        $('#items .item').removeClass('selecting').each(function () {
 
-			x = event.pageX;
-			y = event.pageY;
+            var $item = $(this);
+            var inter = doOverlap(selRect, elementRect($item.find('a')));
 
-			// only on left button and don't block the scrollbars
-			if (event.button !== 0 || x >= viewRight || y >= viewBottom) {
-				return;
-			}
+            if (inter && !$item.hasClass('folder-parent')) {
+                $item.addClass('selecting');
+            }
+        });
+    }
 
-			$(':focus').blur();
-			if (!event.ctrlKey && !event.metaKey) {
-				$('#items .item').removeClass('selected');
-				publish();
-			}
+    function selectionEnd(event) {
 
-			$document
-				.on('mousemove', selectionUpdate)
-				.one('mouseup', selectionEnd);
+        event.preventDefault();
+        $document.off('mousemove', selectionUpdate);
+        $('#items .item.selecting.selected').removeClass('selecting').removeClass('selected');
+        $('#items .item.selecting').removeClass('selecting').addClass('selected');
+        publish();
 
-			selectionUpdate(event);
-		},
+        $selectionRect
+            .stop(true, true)
+            .animate(
+                {
+                    left: l + w * 0.5 * shrink,
+                    top: t + h * 0.5 * shrink,
+                    width: w * (1 - shrink),
+                    height: h * (1 - shrink),
+                    opacity: 0
+                },
+                300,
+                function () {
+                    $selectionRect.hide();
+                }
+            );
+    }
 
-		noSelection = function (event) {
+    function selectionStart(event) {
 
-			event.stopImmediatePropagation();
-			return false;
-		},
+        var $window = $(window);
+        var viewRight = $window.scrollLeft() + $window.width();
+        var viewBottom = $window.scrollTop() + $window.height();
 
-		noSelectionUnlessCtrl = function (event) {
+        x = event.pageX;
+        y = event.pageY;
 
-			if (!event.ctrlKey && !event.metaKey) {
-				noSelection(event);
-			}
-		},
+        // only on left button and don't block the scrollbars
+        if (event.button !== 0 || x >= viewRight || y >= viewBottom) {
+            return;
+        }
 
-		initItem = function (item) {
+        $(':focus').blur();
+        if (!event.ctrlKey && !event.metaKey) {
+            $('#items .item').removeClass('selected');
+            publish();
+        }
 
-			if (item.$view) {
+        $document
+            .on('mousemove', selectionUpdate)
+            .one('mouseup', selectionEnd);
 
-				$(template)
-					.appendTo(item.$view.find('a'))
-					.on('click', function (event) {
+        selectionUpdate(event);
+    }
 
-						event.stopImmediatePropagation();
-						event.preventDefault();
+    function noSelection(event) {
 
-						item.$view.toggleClass('selected');
-						publish();
-					});
-			}
-		},
+        event.stopImmediatePropagation();
+        return false;
+    }
 
-		onLocationChanged = function (item) {
+    function noSelectionUnlessCtrl(event) {
 
-			if (settings.checkboxes) {
-				_.each(item.content, initItem);
-			}
-			publish();
-		},
+        if (!event.ctrlKey && !event.metaKey) {
+            noSelection(event);
+        }
+    }
 
-		onLocationRefreshed = function (item, added, removed) {
+    function initItem(item) {
 
-			var selectionChanged = false;
+        if (item.$view) {
+            $(template)
+                .appendTo(item.$view.find('a'))
+                .on('click', function (event) {
 
-			if (settings.checkboxes) {
-				_.each(added, initItem);
-			}
-			_.each(removed, function (item) {
+                    event.stopImmediatePropagation();
+                    event.preventDefault();
 
-				if (item.$view && item.$view.hasClass('selected')) {
-					item.$view.removeClass('selected');
-					selectionChanged = true;
-				}
-			});
+                    item.$view.toggleClass('selected');
+                    publish();
+                });
+        }
+    }
 
-			if (selectionChanged) {
-				publish();
-			}
-		},
+    function onLocationChanged(item) {
 
-		init = function () {
+        if (settings.checkboxes) {
+            _.each(item.content, initItem);
+        }
+        publish();
+    }
 
-			if (!settings.enabled) {
-				return;
-			}
+    function onLocationRefreshed(item, added, removed) {
 
-			$selectionRect.hide().appendTo('body');
+        var selectionChanged = false;
 
-			event.sub('location.changed', onLocationChanged);
-			event.sub('location.refreshed', onLocationRefreshed);
+        if (settings.checkboxes) {
+            _.each(added, initItem);
+        }
+        _.each(removed, function (item) {
 
-			$document
-				.on('mousedown', '.noSelection', noSelection)
-				.on('mousedown', '.noSelectionUnlessCtrl,input,select,a', noSelectionUnlessCtrl)
-				.on('mousedown', selectionStart);
-		};
+            if (item.$view && item.$view.hasClass('selected')) {
+                item.$view.removeClass('selected');
+                selectionChanged = true;
+            }
+        });
 
-	init();
+        if (selectionChanged) {
+            publish();
+        }
+    }
+
+    function init() {
+
+        if (!settings.enabled) {
+            return;
+        }
+
+        $selectionRect.hide().appendTo('body');
+
+        event.sub('location.changed', onLocationChanged);
+        event.sub('location.refreshed', onLocationRefreshed);
+
+        $document
+            .on('mousedown', '.noSelection', noSelection)
+            .on('mousedown', '.noSelectionUnlessCtrl,input,select,a', noSelectionUnlessCtrl)
+            .on('mousedown', selectionStart);
+    }
+
+
+    init();
 });

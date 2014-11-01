@@ -1,12 +1,30 @@
 {
   "name": "h5ai",
-  "version": "0.25.2+",
+  "version": "0.26.1",
+  "develop": true,
   "description": "a modern HTTP web server index",
   "homepage": "http://larsjung.de/h5ai/",
+  "bugs": "https://github.com/lrsjng/h5ai/issues",
   "author": "Lars Jung <lrsjng@gmail.com> (http://larsjung.de)",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/lrsjng/h5ai.git"
+  },
+  "scripts": {
+    "build": "mkr release",
+    "test": "mocha --recursive test"
+  },
+  "devDependencies": {
+    "fquery": "~0.16.2",
+    "fquery-cssmin": "~0.3.0",
+    "fquery-handlebars": "~0.2.0",
+    "fquery-includeit": "~0.2.0",
+    "fquery-jade": "~0.3.0",
+    "fquery-jshint": "~0.2.0",
+    "fquery-jszip": "~0.4.0",
+    "fquery-less": "~0.2.0",
+    "fquery-uglifyjs": "~0.2.1",
+    "mkr": "~0.6.1"
   }
 }

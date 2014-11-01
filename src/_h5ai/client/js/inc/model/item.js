@@ -1,249 +1,242 @@
-
 modulejs.define('model/item', ['_', 'core/types', 'core/event', 'core/settings', 'core/server', 'core/location'], function (_, types, event, settings, server, location) {
 
+    var reEndsWithSlash = /\/$/;
+    var reSplitPath = /^(.*\/)([^\/]+\/?)$/;
+    var cache = {};
 
-	var reEndsWithSlash = /\/$/,
 
-		startsWith = function (sequence, part) {
+    function startsWith(sequence, part) {
+
+        return sequence.slice && part.length && sequence.slice(0, part.length) === part;
+    }
 
-			return sequence.slice && part.length && sequence.slice(0, part.length) === part;
-		},
+    function createLabel(sequence) {
 
+        sequence = sequence.replace(reEndsWithSlash, '');
+        try { sequence = decodeURIComponent(sequence); } catch (e) {}
+        return sequence;
+    }
 
-		createLabel = function (sequence) {
+    function splitPath(sequence) {
 
-			sequence = sequence.replace(reEndsWithSlash, '');
-			try { sequence = decodeURIComponent(sequence); } catch (e) {}
-			return sequence;
-		},
+        if (sequence === '/') {
+            return { parent: null, name: '/' };
+        }
 
+        var match = reSplitPath.exec(sequence);
+        if (match) {
+            var split = { parent: match[1], name: match[2] };
 
-		reSplitPath = /^(.*\/)([^\/]+\/?)$/,
+            if (split.parent && !startsWith(split.parent, settings.rootHref)) {
+                split.parent = null;
+            }
+            return split;
+        }
+    }
+
+    function getItem(absHref, time, size, isManaged, isContentFetched, md5, sha1) {
 
-		splitPath = function (sequence) {
+        absHref = location.forceEncoding(absHref);
 
-			if (sequence === '/') {
-				return { parent: null, name: '/' };
-			}
+        if (!startsWith(absHref, settings.rootHref)) {
+            return null;
+        }
 
-			var match = reSplitPath.exec(sequence);
-			if (match) {
-				var split = { parent: match[1], name: match[2] };
+        var self = cache[absHref] || new Item(absHref);
 
-				if (split.parent && !startsWith(split.parent, settings.rootHref)) {
-					split.parent = null;
-				}
-				return split;
-			}
-		},
+        if (_.isNumber(time)) {
+            self.time = time;
+        }
+        if (_.isNumber(size)) {
+            self.size = size;
+        }
+        if (isManaged) {
+            self.isManaged = true;
+        }
+        if (isContentFetched) {
+            self.isContentFetched = true;
+        }
+        if (md5) {
+            self.md5 = md5;
+        }
+        if (sha1) {
+            self.sha1 = sha1;
+        }
 
+        return self;
+    }
 
+    function removeItem(absHref) {
 
-		cache = {},
+        absHref = location.forceEncoding(absHref);
 
-		getItem = function (absHref, time, size, isManaged, isContentFetched, md5, sha1) {
+        var self = cache[absHref];
 
-			absHref = location.forceEncoding(absHref);
+        if (self) {
+            delete cache[absHref];
+            if (self.parent) {
+                delete self.parent.content[self.absHref];
+            }
+            _.each(self.content, function (item) {
 
-			if (!startsWith(absHref, settings.rootHref)) {
-				return null;
-			}
+                removeItem(item.absHref);
+            });
+        }
+    }
 
-			var self = cache[absHref] || new Item(absHref);
+    function fetchContent(absHref, callback) {
 
-			if (_.isNumber(time)) {
-				self.time = time;
-			}
-			if (_.isNumber(size)) {
-				self.size = size;
-			}
-			if (isManaged) {
-				self.isManaged = true;
-			}
-			if (isContentFetched) {
-				self.isContentFetched = true;
-			}
-			if (md5) {
-				self.md5 = md5;
-			}
-			if (sha1) {
-				self.sha1 = sha1;
-			}
+        var self = getItem(absHref);
 
-			return self;
-		},
+        if (!_.isFunction(callback)) {
+            callback = function () {};
+        }
 
-		removeItem = function (absHref) {
+        if (self.isContentFetched) {
+            callback(self);
+        } else {
+            server.request({action: 'get', items: true, itemsHref: self.absHref, itemsWhat: 1}, function (response) {
 
-			absHref = location.forceEncoding(absHref);
+                if (response.items) {
+                    _.each(response.items, function (item) {
+                        getItem(item.absHref, item.time, item.size, item.is_managed, item.content, item.md5, item.sha1);
+                    });
+                }
 
-			var self = cache[absHref];
+                callback(self);
+            });
+        }
+    }
 
-			if (self) {
-				delete cache[absHref];
-				if (self.parent) {
-					delete self.parent.content[self.absHref];
-				}
-				_.each(self.content, function (item) {
 
-					removeItem(item.absHref);
-				});
-			}
-		},
+    function Item(absHref) {
 
-		fetchContent = function (absHref, callback) {
+        var split = splitPath(absHref);
 
-			var self = getItem(absHref);
+        cache[absHref] = this;
 
-			if (!_.isFunction(callback)) {
-				callback = function () {};
-			}
+        this.absHref = absHref;
+        this.type = types.getType(absHref);
+        this.label = createLabel(absHref === '/' ? location.getDomain() : split.name);
+        this.time = null;
+        this.size = null;
+        this.parent = null;
+        this.isManaged = null;
+        this.content = {};
 
-			if (self.isContentFetched) {
-				callback(self);
-			} else {
-				server.request({action: 'get', items: true, itemsHref: self.absHref, itemsWhat: 1}, function (response) {
+        if (split.parent) {
+            this.parent = getItem(split.parent);
+            this.parent.content[this.absHref] = this;
+            if (_.keys(this.parent.content).length > 1) {
+                this.parent.isContentFetched = true;
+            }
+        }
+    }
 
-					if (response.items) {
-						_.each(response.items, function (item) {
-							getItem(item.absHref, item.time, item.size, item.is_managed, item.content, item.md5, item.sha1);
-						});
-					}
+    _.extend(Item.prototype, {
 
-					callback(self);
-				});
-			}
-		};
+        isFolder: function () {
 
+            return reEndsWithSlash.test(this.absHref);
+        },
 
+        isCurrentFolder: function () {
 
-	var Item = function (absHref) {
+            return this.absHref === location.getAbsHref();
+        },
 
-		var split = splitPath(absHref);
+        isInCurrentFolder: function () {
 
-		cache[absHref] = this;
+            return !!this.parent && this.parent.isCurrentFolder();
+        },
 
-		this.absHref = absHref;
-		this.type = types.getType(absHref);
-		this.label = createLabel(absHref === '/' ? location.getDomain() : split.name);
-		this.time = null;
-		this.size = null;
-		this.parent = null;
-		this.isManaged = null;
-		this.content = {};
+        isCurrentParentFolder: function () {
 
-		if (split.parent) {
-			this.parent = getItem(split.parent);
-			this.parent.content[this.absHref] = this;
-			if (_.keys(this.parent.content).length > 1) {
-				this.parent.isContentFetched = true;
-			}
-		}
-	};
+            return this === getItem(location.getAbsHref()).parent;
+        },
 
-	_.extend(Item.prototype, {
+        isDomain: function () {
 
-		isFolder: function () {
+            return this.absHref === '/';
+        },
 
-			return reEndsWithSlash.test(this.absHref);
-		},
+        isRoot: function () {
 
-		isCurrentFolder: function () {
+            return this.absHref === settings.rootHref;
+        },
 
-			return this.absHref === location.getAbsHref();
-		},
+        isH5ai: function () {
 
-		isInCurrentFolder: function () {
+            return this.absHref === settings.appHref;
+        },
 
-			return !!this.parent && this.parent.isCurrentFolder();
-		},
+        isEmpty: function () {
 
-		isCurrentParentFolder: function () {
+            return _.keys(this.content).length === 0;
+        },
 
-			return this === getItem(location.getAbsHref()).parent;
-		},
+        fetchContent: function (callback) {
 
-		isDomain: function () {
+            return fetchContent(this.absHref, callback);
+        },
 
-			return this.absHref === '/';
-		},
+        getCrumb: function () {
 
-		isRoot: function () {
+            var item = this;
+            var crumb = [item];
 
-			return this.absHref === settings.rootHref;
-		},
+            while (item.parent) {
+                item = item.parent;
+                crumb.unshift(item);
+            }
 
-		isH5ai: function () {
+            return crumb;
+        },
 
-			return this.absHref === settings.appHref;
-		},
+        getSubfolders: function () {
 
-		isEmpty: function () {
+            return _.sortBy(_.filter(this.content, function (item) {
 
-			return _.keys(this.content).length === 0;
-		},
+                return item.isFolder();
+            }), function (item) {
 
-		fetchContent: function (callback) {
+                return item.label.toLowerCase();
+            });
+        },
 
-			return fetchContent(this.absHref, callback);
-		},
+        getStats: function () {
 
-		getCrumb: function () {
+            var folders = 0;
+            var files = 0;
 
-			var item = this,
-				crumb = [item];
+            _.each(this.content, function (item) {
 
-			while (item.parent) {
-				item = item.parent;
-				crumb.unshift(item);
-			}
+                if (item.isFolder()) {
+                    folders += 1;
+                } else {
+                    files += 1;
+                }
+            });
 
-			return crumb;
-		},
+            var depth = 0;
+            var item = this;
 
-		getSubfolders: function () {
+            while (item.parent) {
+                depth += 1;
+                item = item.parent;
+            }
 
-			return _.sortBy(_.filter(this.content, function (item) {
+            return {
+                folders: folders,
+                files: files,
+                depth: depth
+            };
+        }
+    });
 
-				return item.isFolder();
-			}), function (item) {
 
-				return item.label.toLowerCase();
-			});
-		},
-
-		getStats: function () {
-
-			var folders = 0,
-				files = 0;
-
-			_.each(this.content, function (item) {
-
-				if (item.isFolder()) {
-					folders += 1;
-				} else {
-					files += 1;
-				}
-			});
-
-			var depth = 0,
-				item = this;
-
-			while (item.parent) {
-				depth += 1;
-				item = item.parent;
-			}
-
-			return {
-				folders: folders,
-				files: files,
-				depth: depth
-			};
-		}
-	});
-
-	return {
-		get: getItem,
-		remove: removeItem
-	};
+    return {
+        get: getItem,
+        remove: removeItem
+    };
 });

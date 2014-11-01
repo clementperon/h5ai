@@ -1,122 +1,123 @@
-
 modulejs.define('ext/preview-audio', ['_', '$', 'moment', 'core/settings', 'core/event', 'ext/preview'], function (_, $, moment, allsettings, event, preview) {
 
-	var settings = _.extend({
-			enabled: false,
-			types: []
-		}, allsettings['preview-aud']),
+    var settings = _.extend({
+            enabled: false,
+            types: []
+        }, allsettings['preview-aud']);
 
-		preloadAudio = function (src, callback) {
 
-			var $audio = $('<audio/>')
-				.one('loadedmetadata', function () {
+    function preloadAudio(src, callback) {
 
-					callback($audio);
-					// setTimeout(function () { callback($img); }, 1000); // for testing
-				})
-				.attr('autoplay', 'autoplay')
-				.attr('controls', 'controls')
-				.attr('src', src);
-		},
+        var $audio = $('<audio/>')
+                        .one('loadedmetadata', function () {
 
-		onEnter = function (items, idx) {
+                            callback($audio);
+                            // setTimeout(function () { callback($img); }, 1000); // for testing
+                        })
+                        .attr('autoplay', 'autoplay')
+                        .attr('controls', 'controls')
+                        .attr('src', src);
+    }
 
-			var currentItems = items,
-				currentIdx = idx,
-				currentItem = items[idx],
+    function onEnter(items, idx) {
 
-				onAdjustSize = function () {
+        var currentItems = items;
+        var currentIdx = idx;
+        var currentItem = items[idx];
 
-					var $content = $('#pv-content'),
-						$audio = $('#pv-aud-audio');
+        function onAdjustSize() {
 
-					if ($audio.length) {
+            var $content = $('#pv-content');
+            var $audio = $('#pv-aud-audio');
 
-						$audio.css({
-							'left': '' + (($content.width()-$audio.width())*0.5) + 'px',
-							'top': '' + (($content.height()-$audio.height())*0.5) + 'px'
-						});
+            if ($audio.length) {
 
-						preview.setLabels([
-							currentItem.label,
-							moment(0).add('seconds', $audio[0].duration).format('m:ss')
-						]);
-					}
-				},
+                $audio.css({
+                    'left': '' + (($content.width()-$audio.width())*0.5) + 'px',
+                    'top': '' + (($content.height()-$audio.height())*0.5) + 'px'
+                });
 
-				onIdxChange = function (rel) {
+                preview.setLabels([
+                    currentItem.label,
+                    moment(0).add('seconds', $audio[0].duration).format('m:ss')
+                ]);
+            }
+        }
 
-					currentIdx = (currentIdx + rel + currentItems.length) % currentItems.length;
-					currentItem = currentItems[currentIdx];
+        function onIdxChange(rel) {
 
-					var spinnerTimeout = setTimeout(function () { preview.showSpinner(true); }, 200);
+            currentIdx = (currentIdx + rel + currentItems.length) % currentItems.length;
+            currentItem = currentItems[currentIdx];
 
-					if ($('#pv-aud-audio').length) {
-						$('#pv-aud-audio')[0].pause();
-					}
-					preloadAudio(currentItem.absHref, function ($preloaded_audio) {
+            var spinnerTimeout = setTimeout(function () { preview.showSpinner(true); }, 200);
 
-						clearTimeout(spinnerTimeout);
-						preview.showSpinner(false);
+            if ($('#pv-aud-audio').length) {
+                $('#pv-aud-audio')[0].pause();
+            }
+            preloadAudio(currentItem.absHref, function ($preloaded_audio) {
 
-						$('#pv-content').fadeOut(100, function () {
+                clearTimeout(spinnerTimeout);
+                preview.showSpinner(false);
 
-							$('#pv-content').empty().append($preloaded_audio.attr('id', 'pv-aud-audio')).fadeIn(200);
+                $('#pv-content').fadeOut(100, function () {
 
-							// small timeout, so $preloaded_audio is visible and therefore $preloaded_audio.width is available
-							setTimeout(function () {
-								onAdjustSize();
+                    $('#pv-content').empty().append($preloaded_audio.attr('id', 'pv-aud-audio')).fadeIn(200);
 
-								preview.setIndex(currentIdx + 1, currentItems.length);
-								preview.setRawLink(currentItem.absHref);
-							}, 10);
-						});
-					});
-				};
+                    // small timeout, so $preloaded_audio is visible and therefore $preloaded_audio.width is available
+                    setTimeout(function () {
+                        onAdjustSize();
 
-			onIdxChange(0);
-			preview.setOnIndexChange(onIdxChange);
-			preview.setOnAdjustSize(onAdjustSize);
-			preview.enter();
-		},
+                        preview.setIndex(currentIdx + 1, currentItems.length);
+                        preview.setRawLink(currentItem.absHref);
+                    }, 10);
+                });
+            });
+        }
 
-		initItem = function (item) {
+        onIdxChange(0);
+        preview.setOnIndexChange(onIdxChange);
+        preview.setOnAdjustSize(onAdjustSize);
+        preview.enter();
+    }
 
-			if (item.$view && _.indexOf(settings.types, item.type) >= 0) {
-				item.$view.find('a').on('click', function (event) {
+    function initItem(item) {
 
-					event.preventDefault();
+        if (item.$view && _.indexOf(settings.types, item.type) >= 0) {
+            item.$view.find('a').on('click', function (event) {
 
-					var matchedEntries = _.compact(_.map($('#items .item'), function (item) {
+                event.preventDefault();
 
-						item = $(item).data('item');
-						return _.indexOf(settings.types, item.type) >= 0 ? item : null;
-					}));
+                var matchedEntries = _.compact(_.map($('#items .item'), function (item) {
 
-					onEnter(matchedEntries, _.indexOf(matchedEntries, item));
-				});
-			}
-		},
+                    item = $(item).data('item');
+                    return _.indexOf(settings.types, item.type) >= 0 ? item : null;
+                }));
 
-		onLocationChanged = function (item) {
+                onEnter(matchedEntries, _.indexOf(matchedEntries, item));
+            });
+        }
+    }
 
-			_.each(item.content, initItem);
-		},
+    function onLocationChanged(item) {
 
-		onLocationRefreshed = function (item, added, removed) {
+        _.each(item.content, initItem);
+    }
 
-			_.each(added, initItem);
-		},
+    function onLocationRefreshed(item, added, removed) {
 
-		init = function () {
+        _.each(added, initItem);
+    }
 
-			if (!settings.enabled) {
-				return;
-			}
+    function init() {
 
-			event.sub('location.changed', onLocationChanged);
-			event.sub('location.refreshed', onLocationRefreshed);
-		};
+        if (!settings.enabled) {
+            return;
+        }
 
-	init();
+        event.sub('location.changed', onLocationChanged);
+        event.sub('location.refreshed', onLocationRefreshed);
+    }
+
+
+    init();
 });

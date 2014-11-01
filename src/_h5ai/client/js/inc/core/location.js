@@ -1,209 +1,204 @@
-
 modulejs.define('core/location', ['_', 'modernizr', 'core/settings', 'core/event', 'core/notify'], function (_, modernizr, allsettings, event, notify) {
 
-	var settings = _.extend({
-			smartBrowsing: true,
-			unmanagedInNewWindow: true
-		}, allsettings.view),
-
-		doc = document,
-
-		history = settings.smartBrowsing && modernizr.history ? window.history : null,
-
-		forceEncoding = function (href) {
-
-			return href
-					.replace(/\/+/g, '/')
-
-					.replace(/ /g, '%20')
-					.replace(/!/g, '%21')
-					.replace(/#/g, '%23')
-					.replace(/\$/g, '%24')
-					.replace(/&/g, '%26')
-					.replace(/'/g, '%27')
-					.replace(/\(/g, '%28')
-					.replace(/\)/g, '%29')
-					.replace(/\*/g, '%2A')
-					.replace(/\+/g, '%2B')
-					.replace(/\,/g, '%2C')
-					// .replace(/\//g, '%2F')
-					.replace(/:/g, '%3A')
-					.replace(/;/g, '%3B')
-					.replace(/=/g, '%3D')
-					.replace(/\?/g, '%3F')
-					.replace(/@/g, '%40')
-					.replace(/\[/g, '%5B')
-					.replace(/\]/g, '%5D');
-		},
-
-		reUriToPathname = /^.*:\/\/[^\/]*|[^\/]*$/g,
-		uriToPathname = function (uri) {
-
-			return uri.replace(reUriToPathname, '');
-		},
-
-		hrefsAreDecoded = (function () {
-
-			var testpathname = '/a b',
-				a = doc.createElement('a');
-
-			a.href = testpathname;
-			return uriToPathname(a.href) === testpathname;
-		}()),
-
-		encodedHref = function (href) {
-
-			var a = doc.createElement('a'),
-				location;
-
-			a.href = href;
-			location = uriToPathname(a.href);
-
-			if (hrefsAreDecoded) {
-				location = encodeURIComponent(location).replace(/%2F/ig, '/');
-			}
-
-			return forceEncoding(location);
-		};
+    var settings = _.extend({
+            smartBrowsing: true,
+            unmanagedInNewWindow: true
+        }, allsettings.view);
+    var doc = document;
+    var history = settings.smartBrowsing && modernizr.history ? window.history : null;
+    var reUriToPathname = /^.*:\/\/[^\/]*|[^\/]*$/g;
+    var absHref = null;
 
 
-	var absHref = null,
+    function forceEncoding(href) {
 
-		getDomain = function () {
+        return href
+                .replace(/\/+/g, '/')
 
-			return doc.domain;
-		},
+                .replace(/ /g, '%20')
+                .replace(/!/g, '%21')
+                .replace(/#/g, '%23')
+                .replace(/\$/g, '%24')
+                .replace(/&/g, '%26')
+                .replace(/'/g, '%27')
+                .replace(/\(/g, '%28')
+                .replace(/\)/g, '%29')
+                .replace(/\*/g, '%2A')
+                .replace(/\+/g, '%2B')
+                .replace(/\,/g, '%2C')
+                // .replace(/\//g, '%2F')
+                .replace(/:/g, '%3A')
+                .replace(/;/g, '%3B')
+                .replace(/=/g, '%3D')
+                .replace(/\?/g, '%3F')
+                .replace(/@/g, '%40')
+                .replace(/\[/g, '%5B')
+                .replace(/\]/g, '%5D');
+    }
 
-		getAbsHref = function () {
+    function uriToPathname(uri) {
 
-			return absHref;
-		},
+        return uri.replace(reUriToPathname, '');
+    }
 
-		getItem = function () {
+    var hrefsAreDecoded = (function () {
 
-			return modulejs.require('model/item').get(absHref);
-		},
+            var testpathname = '/a b';
+            var a = doc.createElement('a');
 
-		load = function (callback) {
+            a.href = testpathname;
+            return uriToPathname(a.href) === testpathname;
+        }());
 
-			modulejs.require('core/server').request({action: 'get', items: true, itemsHref: absHref, itemsWhat: 1}, function (json) {
+    function encodedHref(href) {
 
-				var Item = modulejs.require('model/item'),
-					item = Item.get(absHref);
+        var a = doc.createElement('a');
+        var location;
 
-				if (json) {
+        a.href = href;
+        location = uriToPathname(a.href);
 
-					var found = {};
+        if (hrefsAreDecoded) {
+            location = encodeURIComponent(location).replace(/%2F/ig, '/');
+        }
 
-					_.each(json.items, function (jsonItem) {
+        return forceEncoding(location);
+    }
 
-						var e = Item.get(jsonItem.absHref, jsonItem.time, jsonItem.size, jsonItem.is_managed, jsonItem.content, jsonItem.md5, jsonItem.sha1);
-						found[e.absHref] = true;
-					});
+    function getDomain() {
 
-					_.each(item.content, function (e) {
+        return doc.domain;
+    }
 
-						if (!found[e.absHref]) {
-							Item.remove(e.absHref);
-						}
-					});
-				}
-				if (_.isFunction(callback)) {
-					callback(item);
-				}
-			});
-		},
+    function getAbsHref() {
 
-		setLocation = function (newAbsHref, keepBrowserUrl) {
+        return absHref;
+    }
 
-			event.pub('location.beforeChange');
+    function getItem() {
 
-			newAbsHref = encodedHref(newAbsHref);
+        return modulejs.require('model/item').get(absHref);
+    }
 
-			if (absHref !== newAbsHref) {
-				absHref = newAbsHref;
+    function load(callback) {
 
-				if (history) {
-					if (keepBrowserUrl) {
-						history.replaceState({absHref: absHref}, '', absHref);
-					} else {
-						history.pushState({absHref: absHref}, '', absHref);
-					}
-				}
-			}
+        modulejs.require('core/server').request({action: 'get', items: true, itemsHref: absHref, itemsWhat: 1}, function (json) {
 
-			var item = getItem();
-			if (item.isLoaded) {
-				event.pub('location.changed', item);
-				refresh();
-			} else {
-				notify.set('loading...');
-				load(function () {
-					item.isLoaded = true;
-					notify.set();
-					event.pub('location.changed', item);
-				});
-			}
-		},
+            var Item = modulejs.require('model/item');
+            var item = Item.get(absHref);
 
-		refresh = function () {
+            if (json) {
 
-			var item = getItem(),
-				oldItems = _.values(item.content);
+                var found = {};
 
-			event.pub('location.beforeRefresh');
+                _.each(json.items, function (jsonItem) {
 
-			load(function () {
+                    var e = Item.get(jsonItem.absHref, jsonItem.time, jsonItem.size, jsonItem.is_managed, jsonItem.content, jsonItem.md5, jsonItem.sha1);
+                    found[e.absHref] = true;
+                });
 
-				var newItems = _.values(item.content),
-					added = _.difference(newItems, oldItems),
-					removed = _.difference(oldItems, newItems);
+                _.each(item.content, function (e) {
 
-				event.pub('location.refreshed', item, added, removed);
-			});
-		},
+                    if (!found[e.absHref]) {
+                        Item.remove(e.absHref);
+                    }
+                });
+            }
+            if (_.isFunction(callback)) {
+                callback(item);
+            }
+        });
+    }
 
-		setLink = function ($el, item) {
+    function setLocation(newAbsHref, keepBrowserUrl) {
 
-			$el.attr('href', item.absHref);
+        event.pub('location.beforeChange');
 
-			if (history && item.isFolder() && item.isManaged) {
-				$el.on('click', function () {
+        newAbsHref = encodedHref(newAbsHref);
 
-					setLocation(item.absHref);
-					return false;
-				});
-			}
+        if (absHref !== newAbsHref) {
+            absHref = newAbsHref;
 
-			if (settings.unmanagedInNewWindow && !item.isManaged) {
-				$el.attr('target', '_blank');
-			}
-		};
+            if (history) {
+                if (keepBrowserUrl) {
+                    history.replaceState({absHref: absHref}, '', absHref);
+                } else {
+                    history.pushState({absHref: absHref}, '', absHref);
+                }
+            }
+        }
+
+        var item = getItem();
+        if (item.isLoaded) {
+            event.pub('location.changed', item);
+            refresh();
+        } else {
+            notify.set('loading...');
+            load(function () {
+                item.isLoaded = true;
+                notify.set();
+                event.pub('location.changed', item);
+            });
+        }
+    }
+
+    function refresh() {
+
+        var item = getItem();
+        var oldItems = _.values(item.content);
+
+        event.pub('location.beforeRefresh');
+
+        load(function () {
+
+            var newItems = _.values(item.content);
+            var added = _.difference(newItems, oldItems);
+            var removed = _.difference(oldItems, newItems);
+
+            event.pub('location.refreshed', item, added, removed);
+        });
+    }
+
+    function setLink($el, item) {
+
+        $el.attr('href', item.absHref);
+
+        if (history && item.isFolder() && item.isManaged) {
+            $el.on('click', function () {
+
+                setLocation(item.absHref);
+                return false;
+            });
+        }
+
+        if (settings.unmanagedInNewWindow && !item.isManaged) {
+            $el.attr('target', '_blank');
+        }
+    }
 
 
-	if (history) {
-		window.onpopstate = function (e) {
+    if (history) {
+        window.onpopstate = function (e) {
 
-			if (e.state && e.state.absHref) {
-				setLocation(e.state.absHref, true);
-			}
-		};
-	}
+            if (e.state && e.state.absHref) {
+                setLocation(e.state.absHref, true);
+            }
+        };
+    }
+
+    event.sub('ready', function () {
+
+        setLocation(document.location.href, true);
+    });
 
 
-	event.sub('ready', function () {
-
-		setLocation(document.location.href, true);
-	});
-
-
-	return {
-		forceEncoding: forceEncoding,
-		getDomain: getDomain,
-		getAbsHref: getAbsHref,
-		getItem: getItem,
-		setLocation: setLocation,
-		refresh: refresh,
-		setLink: setLink
-	};
+    return {
+        forceEncoding: forceEncoding,
+        getDomain: getDomain,
+        getAbsHref: getAbsHref,
+        getItem: getItem,
+        setLocation: setLocation,
+        refresh: refresh,
+        setLink: setLink
+    };
 });
