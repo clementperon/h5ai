@@ -23,7 +23,8 @@ modulejs.define('ext/l10n', ['_', '$', 'core/settings', 'core/langs', 'core/form
             dateFormat: 'YYYY-MM-DD HH:mm',
             filter: 'filter',
             view: 'View',
-            language: 'Language'
+            language: 'Language',
+            delete: 'Delete'
         };
     var blockTemplate = '<div class="block"><h1 class="l10n-language">Language</h1><div class="select"><select id="langs"/></div></div>';
     var optionTemplate = '<option/>';
