@@ -56,7 +56,14 @@ class App {
 
     public function get_types() {
 
-        return Util::load_commented_json(APP_PATH . "/conf/types.json");
+        $types = Util::load_commented_json(APP_PATH . "/conf/types.json");
+
+        $theme = $this->options["view"]["theme"];
+        if(file_exists(APP_PATH . "/client/themes/${theme}/types.json")) {
+            $types = $types + Util::load_commented_json(APP_PATH . "/client/themes/${theme}/types.json");
+        }
+
+        return $types;
     }
 
 
