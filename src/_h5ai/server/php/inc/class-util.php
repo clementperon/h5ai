@@ -114,7 +114,7 @@ class Util {
             if ($recursive === true && $dir = opendir($path)) {
                 while (($name = readdir($dir)) !== false) {
                     if($name != "." && $name != ".."){
-                        delete_path($path . "/" . $name);
+                        Util::delete_path($path . "/" . $name);
                     }
                 }
                 closedir($dir);
