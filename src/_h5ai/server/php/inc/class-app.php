@@ -60,7 +60,7 @@ class App {
 
         $theme = $this->options["view"]["theme"];
         if(file_exists(APP_PATH . "/client/themes/${theme}/types.json")) {
-            $types = $types + Util::load_commented_json(APP_PATH . "/client/themes/${theme}/types.json");
+            $types = Util::load_commented_json(APP_PATH . "/client/themes/${theme}/types.json") + $types;
         }
 
         return $types;
