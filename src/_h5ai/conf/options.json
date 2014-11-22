@@ -71,7 +71,7 @@ Options
 		"suppressicon": false,
 		"suppresslastmodified": false,
 		"suppresssize": false,
-		"theme": "",
+		"theme": "faenza",
 		"unmanaged": ["index.html", "index.htm", "index.php"],
 		"unmanagedInNewWindow": false
 	},
@@ -215,10 +215,12 @@ Options
 	/*
 	Play a audio preview on click.
 
+    - autoplay: boolean
 	- types: array of types
 	*/
 	"preview-aud": {
 		"enabled": true,
+        "autoplay": false,      
 		"types": ["aud"]
 	},
 
@@ -276,10 +278,12 @@ Options
 	/*
 	Play a video preview on click.
 
+    - autoplay: boolean
 	- types: array of types
 	*/
 	"preview-vid": {
 		"enabled": true,
+        "autoplay": false,
         "types": ["vid-avi", "vid-flv", "vid-mkv", "vid-mov", "vid-mp4", "vid-mpg", "vid-webm"]
     },
 
