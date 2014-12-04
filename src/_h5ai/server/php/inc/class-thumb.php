@@ -95,10 +95,10 @@ class Thumb {
 			$cmdl = Thumb::$AVCONV_LENGTH;
 
 			//Get Duration of the movie in HH:MM:SS
-                        foreach ($cmdl as &$arg) {
-                                $arg = str_replace("[SRC]", escapeshellarg($source_path), $arg);
-                        }
-                        $length = exec(implode($cmdl));
+            foreach ($cmdl as &$arg) {
+                $arg = str_replace("[SRC]", escapeshellarg($source_path), $arg);
+            }
+            $length = exec(implode($cmdl));
 
 			//Convert HH:MM:SS to seconds
 			sscanf($length, "%d:%d:%d", $hours, $minutes, $seconds);
