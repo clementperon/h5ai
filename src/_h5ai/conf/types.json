@@ -62,7 +62,7 @@ File types mapped to file extensions
     "vid-flv":          ["*.flv"],
     "vid-mkv":          ["*.mkv"],
     "vid-mov":          ["*.mov"],
-    "vid-mp4":          ["*.mp4", "*.m4v"],
+    "vid-mp4":          ["*.mp4", "*.m4v", "*.3gp"],
     "vid-mpg":          ["*.mpg"],
     "vid-rm":           ["*.rm"],
     "vid-swf":          ["*.swf"],
