@@ -1,21 +1,27 @@
-modulejs.define('ext/tree', ['_', '$', 'core/settings', 'core/resource', 'core/event', 'core/location'], function (_, $, allsettings, resource, event, location) {
+modulejs.define('ext/tree', ['_', '$', 'core/settings', 'core/resource', 'core/store', 'core/event', 'core/location'], function (_, $, allsettings, resource, store, event, location) {
 
     var settings = _.extend({
             enabled: false,
-            slide: true,
             maxSubfolders: 50
         }, allsettings.tree);
     var template =
             '<div class="item">' +
                 '<span class="indicator none">' +
-                    '<img src="' + resource.image('tree') + '"/>' +
+                    '<img src="' + resource.image('tree-indicator') + '"/>' +
                 '</span>' +
                 '<a>' +
                     '<span class="icon"><img/></span>' +
                     '<span class="label"/>' +
                 '</a>' +
             '</span>';
-    var statusHintTemplate = '<span class="hint"/>';
+    var settingsTemplate =
+            '<div class="block">' +
+                '<h1 class="l10n-tree">Tree</h1>' +
+                '<div id="view-tree" class="button view">' +
+                    '<img src="' + resource.image('tree-toggle') + '" alt="view-tree"/>' +
+                '</div>' +
+            '</div>';
+    var storekey = 'ext/tree';
 
 
     function update(item) {
@@ -31,7 +37,7 @@ modulejs.define('ext/tree', ['_', '$', 'core/settings', 'core/resource', 'core/e
             .data('item', item);
 
         location.setLink($a, item);
-        $img.attr('src', resource.image('folder'));
+        $img.attr('src', resource.icon('folder'));
         $label.text(item.label);
 
         if (item.isFolder()) {
@@ -52,28 +58,15 @@ modulejs.define('ext/tree', ['_', '$', 'core/settings', 'core/resource', 'core/e
                 }
             }
 
-            // is it the domain?
-            if (item.isDomain()) {
-                $html.addClass('domain');
-                $img.attr('src', resource.image('home'));
-            }
-
-            // is it the root?
-            if (item.isRoot()) {
-                $html.addClass('root');
-                $img.attr('src', resource.image('home'));
-            }
-
             // is it the current folder?
             if (item.isCurrentFolder()) {
-                $html.addClass('current');
-                // $img.attr('src', resource.image('folder-open'));
+                $html.addClass('active');
             }
 
             // does it have subfolders?
             if (subfolders.length) {
-                var $ul = $('<ul class="content"/>').appendTo($html),
-                    counter = 0;
+                var $ul = $('<ul class="content"/>').appendTo($html);
+                var counter = 0;
                 _.each(subfolders, function (e) {
                     counter += 1;
                     if (counter <= settings.maxSubfolders) {
@@ -90,10 +83,9 @@ modulejs.define('ext/tree', ['_', '$', 'core/settings', 'core/resource', 'core/e
 
             // reflect folder status
             if (!item.isManaged) {
-                $img.attr('src', resource.image('folder-page'));
+                $img.attr('src', resource.icon('folder-page'));
             }
         }
-
 
         if (item.$tree) {
             item.$tree.replaceWith($html);
@@ -111,11 +103,7 @@ modulejs.define('ext/tree', ['_', '$', 'core/settings', 'core/resource', 'core/e
 
             item.isContentVisible = down;
             $indicator.removeClass('open close').addClass(down ? 'open' : 'close');
-            $tree.scrollpanel('update', true);
-            $content[down ? 'slideDown' : 'slideUp'](function () {
-
-                $tree.scrollpanel('update');
-            });
+            $content[down ? 'slideDown' : 'slideUp']();
         }
 
         return function () {
@@ -151,19 +139,6 @@ modulejs.define('ext/tree', ['_', '$', 'core/settings', 'core/resource', 'core/e
         };
     }
 
-    function shiftTree(forceVisible, dontAnimate) {
-
-        var $tree = $("#tree");
-        var $view = $("#view");
-        var left = ((settings.slide && $tree.outerWidth() < $view.offset().left) || forceVisible || !$view.is(':visible')) ? 0 : 18 - $tree.outerWidth();
-
-        if (dontAnimate) {
-            $tree.stop().css({ left: left });
-        } else {
-            $tree.stop().animate({ left: left });
-        }
-    }
-
     function fetchTree(item, callback) {
 
         item.isContentVisible = true;
@@ -177,30 +152,23 @@ modulejs.define('ext/tree', ['_', '$', 'core/settings', 'core/resource', 'core/e
         });
     }
 
-    function adjustSpacing() {
+    function updateSettings() {
 
-        var $tree = $('#tree');
-        var winHeight = $(window).height();
-        var navHeight = $('#topbar').outerHeight();
-        var footerHeight = $('#bottombar').outerHeight();
-
-        $tree.css({
-            top: navHeight,
-            height: winHeight - navHeight - footerHeight - 16
-        });
-
-        $tree.scrollpanel('update');
+        if (store.get(storekey)) {
+            $('#view-tree').addClass('active');
+            $('#tree').show();
+        } else {
+            $('#view-tree').removeClass('active');
+            $('#tree').hide();
+        }
     }
 
     function onLocationChanged(item) {
 
         fetchTree(item, function (root) {
 
-            $('#tree')
-                .find('.sp-container').append(update(root)).end()
-                .show();
-            adjustSpacing();
-            shiftTree(false, true);
+            $('#tree').append(update(root));
+            updateSettings();
         });
     }
 
@@ -210,27 +178,25 @@ modulejs.define('ext/tree', ['_', '$', 'core/settings', 'core/resource', 'core/e
             return;
         }
 
-        var $tree = $('<div id="tree"/>')
-                        .appendTo('body')
-                        .scrollpanel()
-                        .on('click', '.indicator', createOnIndicatorClick())
-                        .on('mouseenter', function () {
+        $('<div id="tree"/>')
+            .appendTo('#main-row')
+            .on('click', '.indicator', createOnIndicatorClick());
 
-                            shiftTree(true);
-                        })
-                        .on('mouseleave', function () {
+        $(settingsTemplate)
+            .appendTo('#settings')
+            .find('#view-tree')
+            .on('click', function (ev) {
 
-                            shiftTree();
-                        });
+                store.put(storekey, !store.get(storekey));
+                updateSettings();
+                ev.preventDefault();
+            });
 
-        event.sub('ready', adjustSpacing);
+        // ensure stored value is boolean, default to true
+        store.put(storekey, store.get(storekey) !== false);
+        updateSettings();
+
         event.sub('location.changed', onLocationChanged);
-
-        $(window).on('resize', function () {
-
-            adjustSpacing();
-            shiftTree();
-        });
     }
 
 

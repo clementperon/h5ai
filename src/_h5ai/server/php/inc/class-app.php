@@ -70,7 +70,7 @@ class App {
     public function get_theme() {
 
         $theme = $this->options["view"]["theme"];
-        $theme_path = APP_PATH . "/client/themes/${theme}/icons";
+        $theme_path = APP_PATH . "/client/images/themes/${theme}";
 
         $icons = array();
 
@@ -78,8 +78,8 @@ class App {
             if ($dir = opendir($theme_path)) {
                 while (($name = readdir($dir)) !== false) {
                     $path_parts = pathinfo($name);
-                    if (in_array($path_parts["extension"], App::$ICON_EXTS)) {
-                        $icons[$path_parts["filename"]] = "${theme}/icons/${name}";
+                    if (in_array(@$path_parts["extension"], App::$ICON_EXTS)) {
+                        $icons[$path_parts["filename"]] = "${theme}/${name}";
                     }
                 }
                 closedir($dir);

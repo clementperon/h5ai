@@ -1,49 +1,63 @@
 modulejs.define('view/ensure', ['$', 'config', 'core/event'], function ($, config, event) {
 
+    var templateTopbar =
+            '<div id="topbar">' +
+                '<div id="toolbar"/>' +
+                '<div id="crumbbar"/>' +
+            '</div>';
+    var templateMainRow =
+            '<div id="main-row">' +
+                '<div id="sidebar">' +
+                    '<div id="settings"/>' +
+                '</div>' +
+            '</div>';
+    var templateBacklink =
+            '<a id="backlink" href="http://larsjung.de/h5ai/" title="h5ai project page">' +
+                '<div>powered by</div>' +
+                '<div>h5ai ' + config.setup.VERSION + '</div>' +
+            '</a>';
+
+
     var selb = '#bottombar';
-    var selr = selb + ' .right';
-    var sela = selr + ' a';
+    var sela = selb + ' > a';
     var sequence = 'powered by h5ai ' + config.setup.VERSION;
     var url = 'http://larsjung.de/h5ai/';
     var isVisible = ':visible';
     var styleKey = 'style';
-    var styleVal = 'display: inline !important';
 
 
     function ensure() {
 
         if (
-            $(selr).text() !== sequence ||
+            $(sela).text() !== sequence ||
             $(sela).attr('href') !== url ||
             $(sela).filter(isVisible).length !== 1 ||
-            $(selr).filter(isVisible).length !== 1 ||
             $(selb).filter(isVisible).length !== 1
         ) {
-            if ($(selb).filter(isVisible).length !== 1) {
-                $(selb).remove();
-                $('<div id="bottombar"/>').attr(styleKey, styleVal).appendTo('body');
-            }
-            $(selr).remove();
-            $('<span><a/></span>')
-                .addClass('right')
-                .attr(styleKey, styleVal)
-                .find('a')
-                    .attr('href', url)
-                    .attr('title', sequence)
-                    .text(sequence)
-                    .attr(styleKey, styleVal)
-                .end()
-                .prependTo(selb);
+            $(selb).remove();
+            $('<div id="bottombar"/>')
+                .attr(styleKey, 'display: block !important')
+                .appendTo('body');
+            $('<a/>')
+                .attr(styleKey, 'display: inline !important')
+                .attr('href', url)
+                .attr('title', sequence)
+                .text(sequence)
+                .appendTo(selb);
         }
     }
 
     function init() {
 
-        event.sub('ready', function () {
+        $(templateTopbar).appendTo('body');
+        $(templateMainRow).appendTo('body');
+        $(templateBacklink).appendTo('#topbar');
 
-            ensure();
-            setInterval(ensure, 60000);
-        });
+        // event.sub('ready', function () {
+
+        //     ensure();
+        //     setInterval(ensure, 60000);
+        // });
     }
 
 

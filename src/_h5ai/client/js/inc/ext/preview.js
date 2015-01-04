@@ -8,16 +8,16 @@ modulejs.define('ext/preview', ['_', '$', 'core/settings', 'core/resource', 'cor
             '<div id="pv-overlay" class="noSelection">' +
                 '<div id="pv-content"/>' +
                 '<div id="pv-spinner"><img src="' + resource.image('spinner') + '"/></div>' +
-                '<div id="pv-prev-area" class="hof"><img src="' + resource.image('preview/prev') + '"/></div>' +
-                '<div id="pv-next-area" class="hof"><img src="' + resource.image('preview/next') + '"/></div>' +
+                '<div id="pv-prev-area" class="hof"><img src="' + resource.image('preview-prev') + '"/></div>' +
+                '<div id="pv-next-area" class="hof"><img src="' + resource.image('preview-next') + '"/></div>' +
                 '<div id="pv-bottombar" class="clearfix hof">' +
                     '<ul id="pv-buttons">' +
-                        '<li id="pv-bar-close" class="bar-right bar-button"><img src="' + resource.image('preview/close') + '"/></li>' +
-                        '<li id="pv-bar-raw" class="bar-right"><a class="bar-button" target="_blank"><img src="' + resource.image('preview/raw') + '"/></a></li>' +
-                        '<li id="pv-bar-fullscreen" class="bar-right bar-button"><img src="' + resource.image('preview/fullscreen') + '"/></li>' +
-                        '<li id="pv-bar-next" class="bar-right bar-button"><img src="' + resource.image('preview/next') + '"/></li>' +
+                        '<li id="pv-bar-close" class="bar-right bar-button"><img src="' + resource.image('preview-close') + '"/></li>' +
+                        '<li id="pv-bar-raw" class="bar-right"><a class="bar-button" target="_blank"><img src="' + resource.image('preview-raw') + '"/></a></li>' +
+                        '<li id="pv-bar-fullscreen" class="bar-right bar-button"><img src="' + resource.image('preview-fullscreen') + '"/></li>' +
+                        '<li id="pv-bar-next" class="bar-right bar-button"><img src="' + resource.image('preview-next') + '"/></li>' +
                         '<li id="pv-bar-idx" class="bar-right bar-label"/>' +
-                        '<li id="pv-bar-prev" class="bar-right bar-button"><img src="' + resource.image('preview/prev') + '"/></li>' +
+                        '<li id="pv-bar-prev" class="bar-right bar-button"><img src="' + resource.image('preview-prev') + '"/></li>' +
                     '</ul>' +
                 '</div>' +
             '</div>';
@@ -37,7 +37,7 @@ modulejs.define('ext/preview', ['_', '$', 'core/settings', 'core/resource', 'cor
         var $container = $('#pv-content');
         var $spinner = $('#pv-spinner');
         var margin = isFullscreen ? 0 : 20;
-        var barHeight = isFullscreen ? 0 : 31;
+        var barHeight = isFullscreen ? 0 : 48;
 
         $container.css({
             width: winWidth - 2 * margin,
@@ -53,10 +53,10 @@ modulejs.define('ext/preview', ['_', '$', 'core/settings', 'core/resource', 'cor
 
         if (isFullscreen) {
             $('#pv-overlay').addClass('fullscreen');
-            $('#pv-bar-fullscreen').find('img').attr('src', resource.image('preview/no-fullscreen'));
+            $('#pv-bar-fullscreen').find('img').attr('src', resource.image('preview-no-fullscreen'));
         } else {
             $('#pv-overlay').removeClass('fullscreen');
-            $('#pv-bar-fullscreen').find('img').attr('src', resource.image('preview/fullscreen'));
+            $('#pv-bar-fullscreen').find('img').attr('src', resource.image('preview-fullscreen'));
         }
 
         if (_.isFunction(onAdjustSize)) {
@@ -122,7 +122,6 @@ modulejs.define('ext/preview', ['_', '$', 'core/settings', 'core/resource', 'cor
     function onKeydown(ev) {
 
         var key = ev.which;
-        var delay = 300;
 
         if (key === 27) { // esc
             ev.preventDefault();
@@ -131,20 +130,14 @@ modulejs.define('ext/preview', ['_', '$', 'core/settings', 'core/resource', 'cor
         } else if (key === 8 || key === 37) { // backspace, left
             ev.preventDefault();
             ev.stopImmediatePropagation();
-            $('#pv-bar-prev').addClass('hover');
-            setTimeout(function () { $('#pv-bar-prev').removeClass('hover'); }, delay);
             onPrevious();
         } else if (key === 13 || key === 32 || key === 39) { // enter, space, right
             ev.preventDefault();
             ev.stopImmediatePropagation();
-            $('#pv-bar-next').addClass('hover');
-            setTimeout(function () { $('#pv-bar-next').removeClass('hover'); }, delay);
             onNext();
         } else if (key === 70) { // f
             ev.preventDefault();
             ev.stopImmediatePropagation();
-            $('#pv-bar-fullscreen').addClass('hover');
-            setTimeout(function () { $('#pv-bar-fullscreen').removeClass('hover'); }, delay);
             onFullscreen();
         }
     }

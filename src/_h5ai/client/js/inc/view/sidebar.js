@@ -2,14 +2,12 @@ modulejs.define('view/sidebar', ['$', 'core/resource', 'core/store'], function (
 
     var storekey = 'sidebarIsVisible';
     var toggleTemplate =
-            '<li id="sidebar-toggle" class="view">' +
-                '<a href="#">' +
-                    '<img src="' + resource.image('settings') + '" alt="settings"/>' +
-                '</a>' +
-            '</li>';
+            '<div id="sidebar-toggle" class="tool">' +
+                '<img src="' + resource.image('settings') + '" alt="settings"/>' +
+            '</div>';
 
 
-    function update(toggle, animate) {
+    function update(toggle) {
 
         var $toggle = $('#sidebar-toggle');
         var $sidebar = $('#sidebar');
@@ -22,32 +20,24 @@ modulejs.define('view/sidebar', ['$', 'core/resource', 'core/store'], function (
 
         if (isVisible) {
             $toggle.addClass('current');
+            $sidebar.show();
         } else {
             $toggle.removeClass('current');
-        }
-
-        if (animate) {
-            $sidebar.stop().animate({
-                right: isVisible ? 0 : -$sidebar.outerWidth()-1
-            });
-        } else {
-            $sidebar.css({
-                right: store.get(storekey) ? 0 : -$sidebar.outerWidth()-1
-            });
+            $sidebar.hide();
         }
     }
 
     function init() {
 
         $(toggleTemplate)
-            .on('click', 'a', function (ev) {
+            .appendTo('#toolbar')
+            .on('click', function (ev) {
 
-                update(true, true);
+                update(true);
                 ev.preventDefault();
-            })
-            .appendTo('#navbar');
+            });
 
-        update(false, false);
+        update(false);
     }
 
 

@@ -9,11 +9,11 @@ modulejs.define('view/items', ['_', '$', 'core/settings', 'core/resource', 'core
     var itemTemplate =
             '<li class="item">' +
                 '<a>' +
-							( !settings.suppressicon ? '<span class="icon square"><img/></span>' : '' ) +
-							( !settings.suppressicon ? '<span class="icon rational"><img/></span>' : '' ) +
-							'<span class="label"/>' +
-							( !settings.suppresslastmodified ? '<span class="date"/>' : '' ) +
-							( !settings.suppresssize ? '<span class="size"/>' : '' ) +
+                   ( !settings.suppressicon ? '<span class="icon square"><img/></span>' : '' ) +
+                   ( !settings.suppressicon ? '<span class="icon landscape"><img/></span>' : '' ) +
+                   '<span class="label"/>' +
+                   ( !settings.suppresslastmodified ? '<span class="date"/>' : '' ) +
+                   ( !settings.suppresssize ? '<span class="size"/>' : '' ) +
                 '</a>' +
             '</li>';
     var hintTemplate = '<span class="hint"/>';
@@ -54,6 +54,7 @@ modulejs.define('view/items', ['_', '$', 'core/settings', 'core/resource', 'core
 
         $iconImg.attr('src', resource.icon(item.type)).attr('alt', item.type);
         $label.text(item.label);
+        $label.attr('title', item.label);
         $date.data('time', item.time).text(format.formatDate(item.time));
         $size.data('bytes', item.size).text(format.formatSize(item.size));
 
@@ -159,7 +160,8 @@ modulejs.define('view/items', ['_', '$', 'core/settings', 'core/resource', 'core
         event.sub('location.changed', onLocationChanged);
         event.sub('location.refreshed', onLocationRefreshed);
 
-        $content.appendTo('body');
+        // $content.appendTo('body');
+        $content.appendTo('#main-row');
     }
 
 

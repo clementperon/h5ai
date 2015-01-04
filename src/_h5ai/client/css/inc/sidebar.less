@@ -1,18 +1,15 @@
 
 #sidebar {
-    position: fixed;
-    right: -220px;
-    width: 200px;
-    top: 31px;
-    height: 100%;
-    z-index: 3;
+    .card();
+    display: none;
     overflow: auto;
-    padding: 8px;
-    background-color: @col-widget-back;
-    border-left: @border-widget;
+    flex: 0 0 auto;
+    order: 0;
+    background: #fafafa;
 }
 
 #settings {
+    padding: 16px;
 
     .block {
         display: block;
@@ -20,51 +17,46 @@
 
         h1 {
             font-size: 1em;
-            border-bottom: 1px solid #e7e7e7;
+            margin: 2px 0 6px 0;
         }
     }
 
-    a, a:active, a:visited, span.element {
+    .button {
+        display: inline-block;
+        margin: 4px;
+        border-radius: 2px;
         color: @col;
         cursor: pointer;
-        text-decoration: none;
-        opacity: 0.7;
+        // opacity: 0.7;
         .transition(all 0.2s ease-in-out);
 
-        display: block;
-        height: 30px;
-        line-height: 30px;
-        padding: 0 10px;
-
-        &:hover, &.hover {
-            opacity: 1.0;
-            background: @col-widget-back-highlight;
+        &:hover {
+            // opacity: 1.0;
+            background: rgba(0,0,0,0.03);
+            // box-shadow: inset 0 0 4px 0 rgba(0,0,0,0.4);
         }
-    }
 
-    .current {
-        a, span.element {
-            opacity: 1.0;
-            background: @col-widget-back-highlight;
+        &.active {
+            // opacity: 1.0;
+            background: rgba(0,0,0,0.03);
+            box-shadow: inset 0 0 4px 0 rgba(0,0,0,0.4);
         }
-    }
 
-    img {
-        position: relative;
-        top: -2px;
-        width: 16px;
-        height: 16px;
-    }
-
-    .view {
-        display: inline-block;
-        margin: 0 4px 0 0;
+        img {
+            width: 24px;
+            height: 24px;
+            padding: 12px;
+        }
     }
 
     .select {
-        background-color: @col-widget-back-highlight;
-        width: 175px;
+        background: transparent;
         overflow: hidden;
+        border-radius: 2px;
+        outline: 0;
+        width: 142px;
+        margin: 4px;
+        line-height: 48px;
     }
 
     input, select {
@@ -72,33 +64,37 @@
         -ms-appearance: none;
         -webkit-appearance: none;
         font-family: @font-family;
-        font-size: 13px;
+        font-size: @font-size;
         font-weight: @font-weight;
         color: @col;
-        background: @col-widget-back;
+        background: transparent;
         width: 100%;
-        height: 30px;
-        line-height: 30px;
+        // height: 30px;
+        // line-height: 30px;
         border: 0 solid #000;
-        outline: none;
         cursor: pointer;
+        outline: 0;
 
-        &:hover, &.hover {
-            background: @col-widget-back-highlight;
+        &:hover {
+            background: rgba(0,0,0,0.03);
+            // box-shadow: inset 0 0 4px 0 rgba(0,0,0,0.4);
         }
    }
 
     select {
-        width: 200px;
-        padding: 0 4px;
+        width: 172px;
+        padding: 0 8px;
+        line-height: 48px;
     }
 
     input[type='range'] {
         border-radius: 2px;
-        width: 64px;
-        margin: 0 0 4px 12px;
-        padding: 0 2px;
+        width: 142px;
+        margin: 4px;
+        padding: 8px;
         vertical-align: middle;
+        height: 30px;
+        line-height: 30px;
     }
 
     .range-track() {
@@ -106,9 +102,9 @@
         -ms-appearance: none;
         -webkit-appearance: none;
         border-width: 0;
-        border-radius: 2px;
+        border-radius: 20px;
         background: @col-range-back;
-        height: 2px;
+        height: 6px;
     }
 
     .range-thumb() {
@@ -116,10 +112,10 @@
         -ms-appearance: none;
         -webkit-appearance: none;
         border-width: 0;
-        border-radius: 2px;
+        border-radius: 20px;
         background: @col-range-thumb;
-        width: 12px;
-        height: 12px;
+        width: 16px;
+        height: 16px;
     }
 
     input[type='range']::-webkit-slider-runnable-track { .range-track; }
@@ -131,4 +127,8 @@
     input[type='range']::-webkit-slider-thumb { .range-thumb; margin-top: -5px; }
     input[type='range']::-moz-range-thumb { .range-thumb; }
     input[type='range']::-ms-thumb { .range-thumb; }
+
+    #view-size {
+        display: block;
+    }
 }
