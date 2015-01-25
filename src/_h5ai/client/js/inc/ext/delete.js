@@ -4,10 +4,9 @@ modulejs.define('ext/delete', ['_', '$', 'core/settings', 'core/event', 'core/re
 			enabled: false
 		}, allsettings['delete']),
 
-		deleteBtnTemplate = '<li id="delete">' +
+		deleteBtnTemplate = '<div id="delete" class="tool">' +
 									'<a href="#">' +
 										'<img src="' + resource.image('delete') + '" alt="delete"/>' +
-										'<span class="l10n-delete"/>' +
 									'</a>' +
 								'</li>',
 
@@ -48,7 +47,7 @@ modulejs.define('ext/delete', ['_', '$', 'core/settings', 'core/event', 'core/re
 
 					return item.absHref;
 				}).join('|:|');
-				$delete.appendTo('#navbar').show();
+				$delete.appendTo('#toolbar').show();
 			} else {
 				$delete.hide();
 			}
@@ -66,7 +65,7 @@ modulejs.define('ext/delete', ['_', '$', 'core/settings', 'core/event', 'core/re
 					event.preventDefault();
 					requestDeletion(selectedHrefsStr);
 				}).end()
-				.appendTo('#navbar');
+				.appendTo('#toolbar');
 			$img = $delete.find('img');
 
 			event.sub('selection', onSelection);
