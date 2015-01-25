@@ -2,9 +2,10 @@
 
 class Thumb {
 
-	private static $FFMPEG_CMDV = array("ffmpeg", "-ss", "[SEC]", "-i", "[SRC]", "-an", "-vframes", "1", "[DEST]");
-	private static $AVCONV_CMDV = array("avconv", "-ss", "[SEC]", "-i", "[SRC]", "-an", "-vframes", "1", "[DEST]");
-	private static $AVCONV_LENGTH = array("avconv -i ", "[SRC]", " 2>&1 | grep 'Duration' | cut -d ' ' -f 4 | sed s#,##");
+    private static $FFMPEG_CMDV = array("ffmpeg", "-ss", "[SEC]", "-i", "[SRC]", "-an", "-vframes", "1", "[DEST]");
+    private static $AVCONV_CMDV = array("avconv", "-ss", "[SEC]", "-i", "[SRC]", "-an", "-vframes", "1", "[DEST]");
+    private static $FFMPEG_LENGTH = array("ffmpeg -i ", "[SRC]", " 2>&1 | grep 'Duration' | cut -d ' ' -f 4 | sed s#,##");
+    private static $AVCONV_LENGTH = array("avconv -i ", "[SRC]", " 2>&1 | grep 'Duration' | cut -d ' ' -f 4 | sed s#,##");
     private static $CONVERT_CMDV = array("convert", "-density", "200", "-quality", "100", "-sharpen", "0x1.0", "-strip", "[SRC][0]", "[DEST]");
     private static $THUMB_CACHE = "thumbs";
 
@@ -91,14 +92,17 @@ class Thumb {
         $capture_path = $this->thumbs_path . "/capture-" . sha1($source_path) . ".jpg";
 
         if (!file_exists($capture_path) || filemtime($source_path) >= filemtime($capture_path)) {
-
-			$cmdl = Thumb::$AVCONV_LENGTH;
+            if (HAS_CMD_AVCONV) {
+                $cmdl = Thumb::$AVCONV_LENGTH;
+            } else if (HAS_CMD_FFMPEG) {
+                $cmdl = Thumb::$FFMPEG_LENGTH;
+            }
 
 			//Get Duration of the movie in HH:MM:SS
             foreach ($cmdl as &$arg) {
                 $arg = str_replace("[SRC]", escapeshellarg($source_path), $arg);
             }
-            $length = exec(implode($cmdl));
+            $length = Util::exec_cmdv($cmdl);
 
 			//Convert HH:MM:SS to seconds
 			sscanf($length, "%d:%d:%d", $hours, $minutes, $seconds);
