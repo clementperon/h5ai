@@ -102,7 +102,7 @@ class Thumb {
             foreach ($cmdl as &$arg) {
                 $arg = str_replace("[SRC]", escapeshellarg($source_path), $arg);
             }
-            $length = Util::exec_cmdv($cmdl);
+            $length = exec(implode(" ", $cmdl));
 
 			//Convert HH:MM:SS to seconds
 			sscanf($length, "%d:%d:%d", $hours, $minutes, $seconds);
