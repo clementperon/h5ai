@@ -115,7 +115,7 @@ Options
     To select files the "select"-extension needs to be enabled.
 
     - type: "php-tar", "shell-tar" or "shell-zip"
-    - packageName: basename of the download package, null for current foldername
+    - packageName: basename of the download package, null for current filename or foldername
     - alwaysVisible: always show download button (defaults to download the current folder)
     */
     "download": {
@@ -208,6 +208,16 @@ Options
     */
     "link-hover-states": {
         "enabled": true
+    },
+
+    /*
+    Adds peer5 p2p downloader which is based on webrtc (see peer5.com).
+
+    - id: the API key - get your own key - http://peer5.com/downloader
+    */
+    "peer5": {
+        "enabled": false,
+        "id": "z142i5n5qypq4cxr"
     },
 
     /*
@@ -309,13 +319,15 @@ Options
     },
 
     /*
-    Make entries selectable (first mouse button + drag).
+    Make entries selectable.
     At the moment only needed for packaged download.
 
+    - clickndrag: boolean, allow first mouse button + drag selection
     - checkboxes: boolean, show a checkbox on mouse over item
     */
     "select": {
         "enabled": true,
+        "clickndrag": true,
         "checkboxes": true
     },
 
