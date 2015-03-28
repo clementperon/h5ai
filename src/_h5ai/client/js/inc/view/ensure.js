@@ -12,9 +12,9 @@ modulejs.define('view/ensure', ['$', 'config', 'core/event'], function ($, confi
                 '</div>' +
             '</div>';
     var templateBacklink =
-            '<a id="backlink" href="http://larsjung.de/h5ai/" title="h5ai project page">' +
-                '<div>powered by</div>' +
-                '<div>h5ai ' + config.setup.VERSION + '</div>' +
+            '<a id="backlink" href="http://larsjung.de/h5ai/" title="powered by h5ai ' + config.setup.VERSION + '">' +
+                '<div>powered</div>' +
+                '<div>by h5ai</div>' +
             '</a>';
 
 
