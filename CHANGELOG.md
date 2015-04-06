@@ -5,19 +5,31 @@
 * adds editorconfig
 * drops support for IE9 (gets fallback)
 * updates sidebar settings
+* adds info sidebar
 * adds opt-out for click'n'drag selection
 * adds package name option for single selections
 * adds initial support for Peer5
+* adds option to down-sample images for preview
+* adds option for natural sorting in tree sidebar
 * fixes problems with files/folders named `0`
 * changes font from `Ubuntu` to `Roboto` (smaller footprint, clearer for small sizes)
+* switches back to Google Fonts
 * improves PDF thumbnail quality
-* fixes QRCode size option
+* improves drag-select
+* improves image preview
+* prevents listing `_h5ai` folder and subfolders
 * updates build process, now uses [mkr](http://larsjung.de/mkr/) and [fQuery](http://larsjung.de/fquery/)
+* updates `jQuery` to 2.1.3
+* updates `jQuery.qrcode` to 0.11.0
+* updates `Lo-Dash` to 3.6.0
+* updates `Modernizr` to 2.8.3
+* updates `modulejs` to 1.4.0
+* updates `Moment.js` to 2.9.0
+* updates `Prism` to 2015-04-05
+* removes deprecated Google Analytics code
 * removes `jQuery.fracs`
 * removes `jQuery.scrollpanel`
 * removes `jQuery.mousewheel`
-* updates `jQuery.qrcode` to 0.10.1
-* updates `modulejs` to 1.4.0
 * language updates and additions (`af`, `es`, `ja`, `ko`, `ru`, `zh-cn`)
 
 ## v0.26.1 - *2014-08-17*

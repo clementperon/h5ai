@@ -35,13 +35,13 @@ Options
     /*
     General view options.
 
-    - binaryPrefix: set to true uses 1024B=1KiB when formatting file sizes (see http://en.wikipedia.org/wiki/Binary_prefix)
+    - binaryPrefix: boolean, set to true uses 1024B=1KiB when formatting file sizes (see http://en.wikipedia.org/wiki/Binary_prefix)
     - loadsubconf: don't reload options.conf in folder
-    - hidden: don't list items matching these regular expressions
-    - hideFolders: hide all folders in the main view
-    - hideIf403: hide files and folders that are not readable by the server
-    - hideParentFolder: hide parent folder links in the main view
-    - modes: array, subset of ["details", "grid", "icons"]
+    - hidden: array of strings, don't list items matching these regular expressions
+    - hideFolders: boolean, hide all folders in the main view
+    - hideIf403: boolean, hide files and folders that are not readable by the server
+    - hideParentFolder: boolean, hide parent folder links in the main view
+    - modes: array of strings, subset of ["details", "grid", "icons"]
         the first value indicates the default view mode. If only one value
         is given the view mode is fixed and the selector buttons are hidden.
         The user selected view mode is also stored local in modern browsers
@@ -91,6 +91,13 @@ Options
     },
 
     /*
+    Enable a context menu (right-click) on some elements.
+    */
+    "contextmenu": {
+        "enabled": true
+    },
+
+    /*
     Show a clickable breadcrumb.
     */
     "crumb": {
@@ -114,9 +121,9 @@ Options
     Enable packaged download of selected entries.
     To select files the "select"-extension needs to be enabled.
 
-    - type: "php-tar", "shell-tar" or "shell-zip"
-    - packageName: basename of the download package, null for current filename or foldername
-    - alwaysVisible: always show download button (defaults to download the current folder)
+    - type: string, "php-tar", "shell-tar" or "shell-zip"
+    - packageName: string, basename of the download package, null for current filename or foldername
+    - alwaysVisible: boolean, always show download button (defaults to download the current folder)
     */
     "download": {
         "enabled": true,
@@ -144,7 +151,7 @@ Options
     calculation types since "php" only adds the file size, while "shell-du"
     also adds the sizes for the actual folder files.
 
-    - type: "php" (sloooow) or "shell-du" (sloow)
+    - type: string, "php" (sloooow) or "shell-du" (sloow)
     */
     "foldersize": {
         "enabled": true,
@@ -152,27 +159,10 @@ Options
     },
 
     /*
-    Adds Google Analytics asynchronous tracking code.
-
-    for example:
-    "gaq": [
-        ["_setAccount", "UA-xxxxxx-x"],
-        ["_setDomainName", ".your-domain.tld"],
-        ["_trackPageview"],
-        ["_trackPageLoadTime"]
-    ]
-
-    see: https://developers.google.com/analytics/devguides/collection/gajs/
-    */
-    "google-analytics-ga": {
-        "enabled": false,
-        "gaq": []
-    },
-
-    /*
     Adds Google Universial Analytics asynchronous tracking code.
-
     see: https://developers.google.com/analytics/devguides/collection/analyticsjs/
+
+    - id: string, account ID
     */
     "google-analytics-ua": {
         "enabled": false,
@@ -180,11 +170,25 @@ Options
     },
 
     /*
+    Enable a generic info side bar.
+
+    - show: boolean, initial visible to first time users
+    - qrcode: boolean, show a QR-Code
+    - qrColor: string, QR-Code fill color
+    */
+    "info": {
+        "enabled": true,
+        "show": false,
+        "qrcode": true,
+        "qrColor": "#999"
+    },
+
+    /*
     Localization, for example "en", "de" etc. - see "_h5ai/conf/l10n" folder for
     possible values. Adjust it to your needs. If lang is not found
     it defaults to "en".
 
-    - lang: default language
+    - lang: string, default language
     - useBroserLang: boolean, try to use browser language
     */
     "l10n": {
@@ -213,7 +217,7 @@ Options
     /*
     Adds peer5 p2p downloader which is based on webrtc (see peer5.com).
 
-    - id: the API key - get your own key - http://peer5.com/downloader
+    - id: string, the API key
     */
     "peer5": {
         "enabled": false,
@@ -223,7 +227,7 @@ Options
     /*
     Adds Piwik tracker javascript code.
 
-    - baseURL: do not include the protocol, e.g. "mydomain.tld/piwik"
+    - baseURL: string, do not include the protocol, e.g. "mydomain.tld/piwik"
     - idSite: number
     */
     "piwik-analytics": {
@@ -236,7 +240,7 @@ Options
     Play a audio preview on click.
 
     - autoplay: boolean
-    - types: array of types
+    - types: array of strings
     */
     "preview-aud": {
         "enabled": true,
@@ -247,10 +251,12 @@ Options
     /*
     Show an image preview on click.
 
-    - types: array of types
+    - types: array of strings
+    - size: number, sample size, or false for original size
     */
     "preview-img": {
         "enabled": true,
+        "size": false,
         "types": ["img", "img-bmp", "img-gif", "img-ico", "img-jpg", "img-png", "img-raw"]
     },
 
@@ -264,7 +270,7 @@ Options
      - "none" for floating text
      - "fixed" for fixed width text
 
-    - types: maps types to brushes
+    - types: dict string to string, maps types to languages
     */
     "preview-txt": {
         "enabled": true,
@@ -300,22 +306,12 @@ Options
     Play a video preview on click.
 
     - autoplay: boolean
-    - types: array of types
+    - types: array of strings
     */
     "preview-vid": {
         "enabled": true,
         "autoplay": false,
         "types": ["vid-avi", "vid-flv", "vid-mkv", "vid-mov", "vid-mp4", "vid-mpg", "vid-webm"]
-    },
-
-    /*
-    Show QRCodes on hovering files.
-
-    - size: width and height in pixel
-    */
-    "qrcode": {
-        "enabled": true,
-        "size": 150
     },
 
     /*
@@ -335,11 +331,11 @@ Options
     Default sort order.
     "column" and "reverse" are locally stored.
 
-    - column: int, 0 for "Name", 1 for "Date", 2 for "Size"
+    - column: number, 0 for "Name", 1 for "Date", 2 for "Size"
     - reverse: boolean, false for ascending, true for descending
     - ignorecase: boolean, compare ignorecase
     - natural: boolean, use natural sort order
-    - folders: where to place folders, 0 for "top", 1 for "in place", 2 for "bottom"
+    - folders: number, where to place folders, 0 for "top", 1 for "in place", 2 for "bottom"
     */
     "sort": {
         "enabled": true,
@@ -351,20 +347,13 @@ Options
     },
 
     /*
-    Show additional info in a statusbar.
-    */
-    "statusbar": {
-        "enabled": true
-    },
-
-    /*
     Show thumbnails for image files. Needs the "/_{{pkg.name}}/cache" folder to be
     writable for the web Server.
 
-    - img: array of types
-    - mov: array of types
-    - doc: array of types
-    - delay: delay in milliseconds after "dom-ready" before thumb-requesting starts
+    - img: array of strings
+    - mov: array of strings
+    - doc: array of strings
+    - delay: number, delay in milliseconds after "dom-ready" before thumb-requesting starts
     - size: number, size in pixel of the generated thumbnails
     - exif: boolean, use included EXIF thumbs if possible
     */
@@ -374,8 +363,8 @@ Options
         "mov": ["vid-avi", "vid-flv", "vid-mkv", "vid-mov", "vid-mp4", "vid-mpg", "vid-webm"],
         "doc": ["x-pdf", "x-ps"],
         "delay": 1,
-        "size": 100,
-        "exif": true
+        "size": 240,
+        "exif": false
     },
 
     /*
@@ -389,13 +378,15 @@ Options
     Show a folder tree.
     Note that this might affect performance significantly.
 
-    - slide: boolean, slide tree bar into viewport if there is enough space
-    - maxSubfolders: max number of subfolders to show in tree
+    - show: boolean, initial visible to first time users
+    - maxSubfolders: number, max number of subfolders to show in tree
+    - naturalSort: boolean, use natural sort order for folders
     */
     "tree": {
         "enabled": true,
-        "slide": true,
-        "maxSubfolders": 50
+        "show": true,
+        "maxSubfolders": 50,
+        "naturalSort": false
     },
 
 

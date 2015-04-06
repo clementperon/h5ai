@@ -161,6 +161,10 @@ class App {
             return false;
         }
 
+        if ($path === APP_PATH || strpos($path, APP_PATH . '/') === 0) {
+            return false;
+        }
+
         foreach ($this->options["view"]["unmanaged"] as $name) {
             if (file_exists($path . "/" . $name)) {
                 return false;

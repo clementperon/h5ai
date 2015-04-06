@@ -1,8 +1,10 @@
-modulejs.define('ext/tree', ['_', '$', 'core/settings', 'core/resource', 'core/store', 'core/event', 'core/location'], function (_, $, allsettings, resource, store, event, location) {
+modulejs.define('ext/tree', ['_', '$', 'core/settings', 'core/resource', 'core/store', 'core/event', 'core/location', 'core/util'], function (_, $, allsettings, resource, store, event, location, util) {
 
     var settings = _.extend({
             enabled: false,
-            maxSubfolders: 50
+            show: true,
+            maxSubfolders: 50,
+            naturalSort: false
         }, allsettings.tree);
     var template =
             '<div class="item">' +
@@ -23,6 +25,14 @@ modulejs.define('ext/tree', ['_', '$', 'core/settings', 'core/resource', 'core/s
             '</div>';
     var storekey = 'ext/tree';
 
+
+    function cmpFn(item1, item2) {
+
+        var val1 = item1.label;
+        var val2 = item2.label;
+
+        return settings.natural ? util.naturalCmpFn(val1, val2) : util.regularCmpFn(val1, val2);
+    }
 
     function update(item) {
 
@@ -65,6 +75,8 @@ modulejs.define('ext/tree', ['_', '$', 'core/settings', 'core/resource', 'core/s
 
             // does it have subfolders?
             if (subfolders.length) {
+                subfolders.sort(cmpFn);
+
                 var $ul = $('<ul class="content"/>').appendTo($html);
                 var counter = 0;
                 _.each(subfolders, function (e) {
@@ -192,8 +204,10 @@ modulejs.define('ext/tree', ['_', '$', 'core/settings', 'core/resource', 'core/s
                 ev.preventDefault();
             });
 
-        // ensure stored value is boolean, default to true
-        store.put(storekey, store.get(storekey) !== false);
+        // ensure stored value is boolean, otherwise set default
+        if (typeof(store.get(storekey)) !== 'boolean') {
+            store.put(storekey, settings.show);
+        }
         updateSettings();
 
         event.sub('location.changed', onLocationChanged);

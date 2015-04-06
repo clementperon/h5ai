@@ -1,4 +1,17 @@
 
+
+html.drag-select, html.drag-select * {
+    cursor: move !important;
+
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+
 #selection-rect {
     display: none;
     position: absolute;
@@ -6,7 +19,7 @@
     top: 0;
     z-index: 2;
     border: 1px dashed @col-border-strong;
-    background: rgba(0,0,0,0.01);
+    background: rgba(0,0,0,0.1);
 }
 
 
@@ -110,7 +123,7 @@
         top: 0;
         width: 22px;
         height: 22px;
-        background-color: @col-back-selected;
+        background: @col-back-selected;
         cursor: pointer;
         border-radius: 0 0 2px 0;
         opacity: 0.6;
