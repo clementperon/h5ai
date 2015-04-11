@@ -29,29 +29,7 @@ function getBuildSuffix(callback) {
 }
 
 
-$.fn.autoprefixer = function (options) {
-
-    var autoprefixer = require('autoprefixer-core');
-    var options = {browsers: ['last 2 versions']};
-
-    return this.edit(function (blob) {
-
-        try {
-            blob.content = autoprefixer.process(blob.content, options).css;
-        } catch (e) {
-            $.report({
-                type: 'err',
-                method: 'autoprefixer',
-                message: e.message,
-                fquery: this,
-                blob: blob,
-                err: e
-            });
-        }
-    });
-};
-
-
+$.plugin('fquery-autoprefixer');
 $.plugin('fquery-cssmin');
 $.plugin('fquery-handlebars');
 $.plugin('fquery-includeit');
@@ -117,7 +95,7 @@ module.exports = function (suite) {
     });
 
 
-    suite.target('build', ['check-version', 'lint'], 'build all updated files').task(function () {
+    suite.target('build', ['check-version', 'lint'], 'build all updated files, optionally use :uncompressed (e.g. mkr build :uncompressed)').task(function () {
 
         var header = '/* ' + pkg.name + ' ' + pkg.version + ' - ' + pkg.homepage + ' */\n';
         var env = {pkg: pkg};
@@ -125,7 +103,7 @@ module.exports = function (suite) {
         $(src + ': _h5ai/client/js/*.js')
             .newerThan(mapSrc, $(src + ': _h5ai/client/js/**'))
             .includeit()
-            .uglifyjs()
+            .if(!suite.args.uncompressed, function () { this.uglifyjs(); })
             .wrap(header)
             .write(mapSrc, true);
 
@@ -133,12 +111,8 @@ module.exports = function (suite) {
             .newerThan(mapSrc, $(src + ': _h5ai/client/css/**'))
             .less()
             .autoprefixer()
-            .cssmin()
+            .if(!suite.args.uncompressed, function () { this.cssmin(); })
             .wrap(header)
-            .write(mapSrc, true);
-
-        $(src + ': _h5ai/client/css/fonts/**')
-            .newerThan(mapSrc)
             .write(mapSrc, true);
 
         $(src + ': **/*.jade')
@@ -157,43 +131,20 @@ module.exports = function (suite) {
     });
 
 
-    suite.target('build-uncompressed', ['check-version', 'lint'], 'build all updated files').task(function () {
+    suite.target('deploy', ['build'], 'deploy to a specified path (e.g. mkr deploy :dest=/some/path)').task(function () {
 
-        var header = '/* ' + pkg.name + ' ' + pkg.version + ' - ' + pkg.homepage + ' */\n';
-        var env = {pkg: pkg};
+        if (!$._.isString(suite.args.dest)) {
+            $.report({
+                type: 'err',
+                message: 'no destination path (e.g. mkr deploy :dest=/some/path)'
+            });
+        }
 
-        $(src + ': _h5ai/client/js/*.js')
-            .newerThan(mapSrc, $(src + ': _h5ai/client/js/**'))
-            .includeit()
-            // .uglifyjs()
-            .wrap(header)
-            .write(mapSrc, true);
+        var mapper = $.map.p(build, path.resolve(suite.args.dest));
 
-        $(src + ': _h5ai/client/css/*.less')
-            .newerThan(mapSrc, $(src + ': _h5ai/client/css/**'))
-            .less()
-            .autoprefixer()
-            // .cssmin()
-            .wrap(header)
-            .write(mapSrc, true);
-
-        $(src + ': _h5ai/client/css/fonts/**')
-            .newerThan(mapSrc)
-            .write(mapSrc, true);
-
-        $(src + ': **/*.jade')
-            .newerThan(mapSrc)
-            .jade(env)
-            .write(mapSrc, true);
-
-        $(src + ': **, ! _h5ai/client/js/**, ! _h5ai/client/css/**, ! **/*.jade')
-            .newerThan(mapSrc)
-            .handlebars(env)
-            .write(mapSrc, true);
-
-        $(root + ': *.md')
-            .newerThan(mapRoot)
-            .write(mapRoot, true);
+        $(build + ': _h5ai/**')
+            .newerThan(mapper)
+            .write(mapper, true);
     });
 
 
@@ -202,7 +153,7 @@ module.exports = function (suite) {
         var target = path.join(build, pkg.name + '-' + pkg.version + '.zip');
 
         $(build + ': **')
-            .jszip({dir: build})
+            .jszip({dir: build, level: 9})
             .write(target, true);
     });
 };
