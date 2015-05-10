@@ -41,15 +41,13 @@ modulejs.define('ext/contextmenu', ['_', '$', 'core/settings', 'core/resource'],
 
             if (entry.type === '-') {
                 $(templateSep).appendTo($ul);
-            }
 
-            else if (entry.type === 'l') {
+            } else if (entry.type === 'l') {
                 $(templateLabel)
                     .find('.cm-text').text(entry.text).end()
                     .appendTo($ul);
-            }
 
-            else if (entry.type === 'e') {
+            } else if (entry.type === 'e') {
                 $li = $(templateEntry)
                         .data('cm-id', entry.id)
                         .find('.cm-text').text(entry.text).end()
@@ -83,9 +81,9 @@ modulejs.define('ext/contextmenu', ['_', '$', 'core/settings', 'core/resource'],
         var overlayWidth = $overlay.outerWidth(true);
         var overlayHeight = $overlay.outerHeight(true);
 
-        var panelOffset = $panel.offset();
-        var panelLeft = panelOffset.left;
-        var panelTop = panelOffset.top;
+        // var panelOffset = $panel.offset();
+        // var panelLeft = panelOffset.left;
+        // var panelTop = panelOffset.top;
         var panelWidth = $panel.outerWidth(true);
         var panelHeight = $panel.outerHeight(true);
 

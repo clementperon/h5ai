@@ -11,21 +11,15 @@ var root = path.resolve(__dirname);
 var src = path.join(root, 'src');
 var build = path.join(root, 'build');
 
-var mapSrc = $.map.p(src, build).s('.less', '.css').s('.jade', '');
-var mapRoot = $.map.p(root, path.join(build, '_h5ai'));
 
+function getBuildSuffixSync() {
 
-function getBuildSuffix(callback) {
-
-    require('child_process').exec('git rev-list v' + pkg.version + '..HEAD', {cwd: root}, function (err, out) {
-
-        try {
-            var lines = out.trim().split(/\r?\n/);
-            callback('+' + ('000' + lines.length).substr(-3) + '~' + lines[0].substring(0, 7));
-        } catch (e) {
-            callback('+X');
-        }
-    });
+    try {
+        var out = require('child_process').execSync('git rev-list v' + pkg.version + '..HEAD', {cwd: root, encoding: 'utf8'});
+        var lines = out.trim().split(/\r?\n/);
+        return '+' + ('000' + lines.length).substr(-3) + '~' + lines[0].substring(0, 7);
+    } catch (e) {}
+    return '+X';
 }
 
 
@@ -46,19 +40,12 @@ module.exports = function (suite) {
     suite.defaults('release');
 
 
-    suite.target('check-version', [], 'add git info to dev builds').task(function (done) {
+    suite.target('check-version', [], 'add git info to dev builds').task(function () {
 
-        if (!pkg.develop) {
-            done();
-            return;
-        }
-
-        getBuildSuffix(function (result) {
-
-            pkg.version += result;
+        if (pkg.develop) {
+            pkg.version += getBuildSuffixSync();
             $.report({type: 'info', method: 'check-version', message: 'version set to ' + pkg.version});
-            done();
-        });
+        }
     });
 
 
@@ -70,28 +57,11 @@ module.exports = function (suite) {
 
     suite.target('lint', [], 'lint all JavaScript files with JSHint').task(function () {
 
-        var jshint = {
-                // Enforcing Options
-                bitwise: true,
-                curly: true,
-                eqeqeq: true,
-                forin: true,
-                latedef: true,
-                newcap: true,
-                noempty: true,
-                plusplus: true,
-                trailing: true,
-                undef: true,
-
-                // Environments
-                browser: true
-            };
-        var globals = {
-                modulejs: true
-            };
+        var fs = require('fs');
+        var jshint = JSON.parse(fs.readFileSync('.jshintrc', 'utf8'));
 
         $(src + '/_h5ai/client/js: **/*.js, ! lib/**')
-            .jshint(jshint, globals);
+            .jshint(jshint, jshint.globals);
     });
 
 
@@ -99,6 +69,8 @@ module.exports = function (suite) {
 
         var header = '/* ' + pkg.name + ' ' + pkg.version + ' - ' + pkg.homepage + ' */\n';
         var env = {pkg: pkg};
+        var mapSrc = $.map.p(src, build).s('.less', '.css').s('.jade', '');
+        var mapRoot = $.map.p(root, path.join(build, '_h5ai'));
 
         $(src + ': _h5ai/client/js/*.js')
             .newerThan(mapSrc, $(src + ': _h5ai/client/js/**'))
@@ -155,5 +127,40 @@ module.exports = function (suite) {
         $(build + ': **')
             .jszip({dir: build, level: 9})
             .write(target, true);
+    });
+
+
+    suite.target('build-test', [], 'build a test suite').task(function () {
+
+        $(src + '/_h5ai/client/css/styles.less')
+            .less()
+            .autoprefixer()
+            .write(build + '/test/h5ai-styles.css', true);
+
+        $(src + '/_h5ai/client/js/scripts.js')
+            .includeit()
+            .write(build + '/test/h5ai-scripts.js', true);
+
+        $(root + '/test/styles.less')
+            .less()
+            .autoprefixer()
+            .write(build + '/test/styles.css', true);
+
+        $(root + '/test/scripts.js')
+            .includeit()
+            .write(build + '/test/scripts.js', true);
+
+        $(root + '/test/tests.js')
+            .includeit()
+            .write(build + '/test/tests.js', true);
+
+        $(root + '/test/index.html.jade')
+            .jade()
+            .write(build + '/test/index.html', true);
+
+        $.report({
+            type: 'info',
+            message: 'browse to file://' + build + '/test/index.html'
+        });
     });
 };

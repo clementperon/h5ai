@@ -19,7 +19,7 @@ modulejs.define('ext/preview-txt', ['_', '$', 'marked', 'prism', 'core/settings'
                 callback(content);
                 // setTimeout(function () { callback(content); }, 1000); // for testing
             })
-            .fail(function (jqXHR, textStatus, errorThrown) {
+            .fail(function (jqXHR, textStatus) {
 
                 callback('[ajax error] ' + textStatus);
             });
@@ -57,7 +57,8 @@ modulejs.define('ext/preview-txt', ['_', '$', 'marked', 'prism', 'core/settings'
                 $('#pv-content').fadeOut(100, function () {
 
                     var type = settings.types[currentItem.type];
-                    var $text, $code;
+                    var $text;
+                    var $code;
 
                     if (type === 'none') {
                         $text = $(templateMarkdown).text(textContent);
@@ -82,7 +83,7 @@ modulejs.define('ext/preview-txt', ['_', '$', 'marked', 'prism', 'core/settings'
                     preview.setIndex(currentIdx + 1, currentItems.length);
                     preview.setLabels([
                         currentItem.label,
-                        '' + currentItem.size + ' bytes'
+                        String(currentItem.size) + ' bytes'
                     ]);
                     preview.setRawLink(currentItem.absHref);
                 });
@@ -118,7 +119,7 @@ modulejs.define('ext/preview-txt', ['_', '$', 'marked', 'prism', 'core/settings'
         _.each(item.content, initItem);
     }
 
-    function onLocationRefreshed(item, added, removed) {
+    function onLocationRefreshed(item, added) {
 
         _.each(added, initItem);
     }

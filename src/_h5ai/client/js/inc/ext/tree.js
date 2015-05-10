@@ -109,8 +109,6 @@ modulejs.define('ext/tree', ['_', '$', 'core/settings', 'core/resource', 'core/s
 
     function createOnIndicatorClick() {
 
-        var $tree = $('#tree');
-
         function slide(item, $indicator, $content, down) {
 
             item.isContentVisible = down;
@@ -144,7 +142,7 @@ modulejs.define('ext/tree', ['_', '$', 'core/settings', 'core/resource', 'core/s
 
                 slide(item, $indicator, $content, false);
 
-            } else if ($indicator.hasClass('close'))  {
+            } else if ($indicator.hasClass('close')) {
 
                 slide(item, $indicator, $content, true);
             }
@@ -205,7 +203,7 @@ modulejs.define('ext/tree', ['_', '$', 'core/settings', 'core/resource', 'core/s
             });
 
         // ensure stored value is boolean, otherwise set default
-        if (typeof(store.get(storekey)) !== 'boolean') {
+        if (typeof (store.get(storekey)) !== 'boolean') {
             store.put(storekey, settings.show);
         }
         updateSettings();

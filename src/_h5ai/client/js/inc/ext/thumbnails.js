@@ -1,4 +1,4 @@
-modulejs.define('ext/thumbnails', ['_', 'core/settings', 'core/event', 'core/server', 'core/resource'], function (_, allsettings, event, server, resource) {
+modulejs.define('ext/thumbnails', ['_', 'core/settings', 'core/event', 'core/server'], function (_, allsettings, event, server) {
 
     var settings = _.extend({
             enabled: false,
@@ -52,7 +52,7 @@ modulejs.define('ext/thumbnails', ['_', 'core/settings', 'core/event', 'core/ser
             if (item.thumbRational) {
                 item.$view.find('.icon.landscape img').addClass('thumb').attr('src', item.thumbRational);
             } else {
-                requestThumb(type, item.absHref, 4/3, function (src) {
+                requestThumb(type, item.absHref, 4 / 3, function (src) {
 
                     if (src && item.$view) {
                         item.thumbRational = src;
@@ -71,7 +71,7 @@ modulejs.define('ext/thumbnails', ['_', 'core/settings', 'core/event', 'core/ser
         }, settings.delay);
     }
 
-    function onLocationRefreshed(item, added, removed) {
+    function onLocationRefreshed(item, added) {
 
         _.each(added, checkItem);
     }

@@ -1,4 +1,4 @@
-modulejs.define('ext/preview-audio', ['_', '$', 'moment', 'core/settings', 'core/event', 'ext/preview'], function (_, $, moment, allsettings, event, preview) {
+modulejs.define('ext/preview-audio', ['_', '$', 'core/settings', 'core/event', 'core/format', 'ext/preview'], function (_, $, allsettings, event, format, preview) {
 
     var settings = _.extend({
             enabled: false,
@@ -38,13 +38,13 @@ modulejs.define('ext/preview-audio', ['_', '$', 'moment', 'core/settings', 'core
             if ($audio.length) {
 
                 $audio.css({
-                    'left': '' + (($content.width()-$audio.width())*0.5) + 'px',
-                    'top': '' + (($content.height()-$audio.height())*0.5) + 'px'
+                    left: String(($content.width() - $audio.width()) * 0.5) + 'px',
+                    top: String(($content.height() - $audio.height()) * 0.5) + 'px'
                 });
 
                 preview.setLabels([
                     currentItem.label,
-                    moment(0).add('seconds', $audio[0].duration).format('m:ss')
+                    format.formatDate($audio[0].duration * 1000, 'm:ss')
                 ]);
             }
         }
@@ -59,16 +59,16 @@ modulejs.define('ext/preview-audio', ['_', '$', 'moment', 'core/settings', 'core
             if ($('#pv-aud-audio').length) {
                 $('#pv-aud-audio')[0].pause();
             }
-            preloadAudio(currentItem.absHref, function ($preloaded_audio) {
+            preloadAudio(currentItem.absHref, function ($preloadedAudio) {
 
                 clearTimeout(spinnerTimeout);
                 preview.showSpinner(false);
 
                 $('#pv-content').fadeOut(100, function () {
 
-                    $('#pv-content').empty().append($preloaded_audio.attr('id', 'pv-aud-audio')).fadeIn(200);
+                    $('#pv-content').empty().append($preloadedAudio.attr('id', 'pv-aud-audio')).fadeIn(200);
 
-                    // small timeout, so $preloaded_audio is visible and therefore $preloaded_audio.width is available
+                    // small timeout, so $preloadedAudio is visible and therefore $preloadedAudio.width is available
                     setTimeout(function () {
                         onAdjustSize();
 
@@ -108,7 +108,7 @@ modulejs.define('ext/preview-audio', ['_', '$', 'moment', 'core/settings', 'core
         _.each(item.content, initItem);
     }
 
-    function onLocationRefreshed(item, added, removed) {
+    function onLocationRefreshed(item, added) {
 
         _.each(added, initItem);
     }

@@ -26,7 +26,7 @@ modulejs.define('ext/download', ['_', '$', 'core/settings', 'core/resource', 'co
         }
     }
 
-    function onClick(event) {
+    function onClick() {
 
         var type = settings.type;
         var name = settings.packageName;

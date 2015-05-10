@@ -4,7 +4,7 @@ modulejs.define('ext/info', ['_', '$', 'modernizr', 'core/settings', 'core/resou
             enabled: false,
             show: false,
             qrcode: true,
-            qrColor: "#999"
+            qrColor: '#999'
         }, allsettings.info);
     var template =
             '<div id="info">' +
@@ -27,9 +27,15 @@ modulejs.define('ext/info', ['_', '$', 'modernizr', 'core/settings', 'core/resou
                     '<img src="' + resource.image('info-toggle') + '" alt="view-info"/>' +
                 '</div>' +
             '</div>';
-    var sepTemplate = '<span class="sep"/>';
     var storekey = 'ext/info';
-    var $img, $label, $time, $size, $content, $folders, $files, $qrcode;
+    var $img;
+    var $label;
+    var $time;
+    var $size;
+    var $content;
+    var $folders;
+    var $files;
+    var $qrcode;
     var currentFolder;
 
     // <span class="l10n-folders"/>
@@ -49,7 +55,7 @@ modulejs.define('ext/info', ['_', '$', 'modernizr', 'core/settings', 'core/resou
     function update(item) {
 
         var src = item.thumbRational || item.icon;
-        var isThumb = !!item.thumbRational;
+        var isThumb = Boolean(item.thumbRational);
 
         if (item.isCurrentFolder() || !src) {
             src = resource.icon('folder');
@@ -101,7 +107,7 @@ modulejs.define('ext/info', ['_', '$', 'modernizr', 'core/settings', 'core/resou
         update(item);
     }
 
-    function onMouseleave(item) {
+    function onMouseleave() {
 
         update(currentFolder);
     }
@@ -143,7 +149,7 @@ modulejs.define('ext/info', ['_', '$', 'modernizr', 'core/settings', 'core/resou
             });
 
         // ensure stored value is boolean, otherwise set default
-        if (typeof(store.get(storekey)) !== 'boolean') {
+        if (typeof (store.get(storekey)) !== 'boolean') {
             store.put(storekey, settings.show);
         }
         updateSettings();

@@ -4,23 +4,22 @@
 // @include "lib/lodash-*.js"
 // @include "lib/marked-*.js"
 // @include "lib/modulejs-*.js"
-// @include "lib/moment-*.js"
 // @include "lib/prism-*.js"
 
 (function () {
-'use strict';
+    'use strict';
 
-    /*global jQuery, marked, Modernizr, moment, Prism, _ */
-    modulejs.define('$', function () { return jQuery; });
-    modulejs.define('marked', function () { return marked; });
-    modulejs.define('modernizr', function () { return Modernizr; });
-    modulejs.define('moment', function () { return moment; });
-    modulejs.define('prism', function () { return Prism; });
-    modulejs.define('_', function () { return _; });
+    var win = window;
+
+    modulejs.define('$', function () { return win.jQuery; });
+    modulejs.define('_', function () { return win._; });
+    modulejs.define('marked', function () { return win.marked; });
+    modulejs.define('modernizr', function () { return win.Modernizr; });
+    modulejs.define('prism', function () { return win.Prism; });
 
     // @include "inc/**/*.js"
 
-    var $ = jQuery;
+    var $ = win.jQuery;
 
     if ($('html').hasClass('no-browser')) {
         return;
