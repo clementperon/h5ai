@@ -46,7 +46,7 @@ Options
     "view": {
         "binaryPrefix": false,
         "fastBrowsing": true,
-        "loadsubconf": false,
+        "loadsubconf": true,
         "hidden": ["^\\.", "^_{{pkg.name}}"],
         "hideFolders": false,
         "hideIf403": true,
