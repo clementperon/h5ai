@@ -2,6 +2,7 @@ modulejs.define('ext/preview-vid', ['_', '$', 'core/event', 'core/settings', 'ex
 
     var settings = _.extend({
             enabled: false,
+            autoplay: false,
             types: []
         }, allsettings['preview-vid']);
 
@@ -14,9 +15,13 @@ modulejs.define('ext/preview-vid', ['_', '$', 'core/event', 'core/settings', 'ex
                             callback($video);
                             // setTimeout(function () { callback($video); }, 1000); // for testing
                         })
-                        .attr('autoplay', 'autoplay')
                         .attr('controls', 'controls')
                         .attr('src', src);
+
+        if(settings.autoplay){
+            $video.attr('autoplay', 'autoplay');
+        }
+
     }
 
     function onEnter(items, idx) {
