@@ -10,10 +10,10 @@ modulejs.define('view/view', ['_', '$', 'core/event', 'core/format', 'core/locat
             '<div id="view">' +
                 '<ul id="items" class="clearfix">' +
                     '<li class="header">' +
-                        '<a class="icon"/>' +
+                        ( !settings.suppressicon ? '<a class="icon"/>' : '') +
                         '<a class="label" href="#"><span class="l10n-name"/></a>' +
-                        '<a class="date" href="#"><span class="l10n-lastModified"/></a>' +
-                        '<a class="size" href="#"><span class="l10n-size"/></a>' +
+                        ( !settings.suppresslastmodified ? '<a class="date" href="#"><span class="l10n-lastModified"/></a>' : '') +
+                        ( !settings.suppresssize ? '<a class="size" href="#"><span class="l10n-size"/></a>' : '') +
                     '</li>' +
                 '</ul>' +
                 '<div id="view-hint"/>' +
@@ -21,11 +21,11 @@ modulejs.define('view/view', ['_', '$', 'core/event', 'core/format', 'core/locat
     var itemTemplate =
             '<li class="item">' +
                 '<a>' +
-                    '<span class="icon square"><img/></span>' +
-                    '<span class="icon landscape"><img/></span>' +
+                    ( !settings.suppressicon ? '<span class="icon square"><img/></span>' : '') +
+                    ( !settings.suppressicon ? '<span class="icon landscape"><img/></span>' : '') +
                     '<span class="label"/>' +
-                    '<span class="date"/>' +
-                    '<span class="size"/>' +
+                    ( !settings.suppresslastmodified ? '<span class="date"/>' : '') +
+                    ( !settings.suppresssize ? '<span class="size"/>' : '') +
                 '</a>' +
             '</li>';
     var $view = $(template);
