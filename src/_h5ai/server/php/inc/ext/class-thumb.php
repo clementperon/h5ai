@@ -2,11 +2,12 @@
 
 class Thumb {
 
-    private static $FFMPEG_CMDV = ["ffmpeg", "-ss", "0:00:10", "-i", "[SRC]", "-an", "-vframes", "1", "[DEST]"];
-    private static $AVCONV_CMDV = ["avconv", "-ss", "0:00:10", "-i", "[SRC]", "-an", "-vframes", "1", "[DEST]"];
+    private static $FFMPEG_CMDV = ["ffmpeg", "-ss", "[SEC]", "-i", "[SRC]", "-an", "-vframes", "1", "[DEST]"];
+    private static $AVCONV_CMDV = ["avconv", "-ss", "[SEC]", "-i", "[SRC]", "-an", "-vframes", "1", "[DEST]"];
+    private static $FFMPEG_LENGTH = ["ffmpeg -i ", "[SRC]", " 2>&1 | grep 'Duration' | cut -d ' ' -f 4 | sed s#,##"];
+    private static $AVCONV_LENGTH = ["avconv -i ", "[SRC]", " 2>&1 | grep 'Duration' | cut -d ' ' -f 4 | sed s#,##"];
     private static $CONVERT_CMDV = ["convert", "-density", "200", "-quality", "100", "-sharpen", "0x1.0", "-strip", "[SRC][0]", "[DEST]"];
     private static $THUMB_CACHE = "thumbs";
-
 
     private $app, $thumbs_path, $thumbs_href;
 
@@ -90,11 +91,27 @@ class Thumb {
         $capture_path = $this->thumbs_path . "/capture-" . sha1($source_path) . ".jpg";
 
         if (!file_exists($capture_path) || filemtime($source_path) >= filemtime($capture_path)) {
-
-            foreach ($cmdv as &$arg) {
-                $arg = str_replace("[SRC]", $source_path, $arg);
-                $arg = str_replace("[DEST]", $capture_path, $arg);
+            if (HAS_CMD_AVCONV) {
+                $cmdl = Thumb::$AVCONV_LENGTH;
+            } else if (HAS_CMD_FFMPEG) {
+                $cmdl = Thumb::$FFMPEG_LENGTH;
             }
+
+			//Get Duration of the movie in HH:MM:SS
+            foreach ($cmdl as &$arg) {
+                $arg = str_replace("[SRC]", escapeshellarg($source_path), $arg);
+            }
+            $length = exec(implode(" ", $cmdl));
+
+			//Convert HH:MM:SS to seconds
+			sscanf($length, "%d:%d:%d", $hours, $minutes, $seconds);
+			$time_seconds = isset($seconds) ? $hours * 3600 + $minutes * 60 + $seconds : $hours * 60 + $minutes;
+
+			foreach ($cmdv as &$arg) {
+				$arg = str_replace("[SRC]", $source_path, $arg);
+				$arg = str_replace("[DEST]", $capture_path, $arg);
+				$arg = str_replace("[SEC]", $time_seconds/2, $arg);
+			}
 
             Util::exec_cmdv($cmdv);
         }
