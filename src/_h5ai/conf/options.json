@@ -361,5 +361,42 @@ Options
         "show": true,
         "maxSubfolders": 50,
         "naturalSort": false
-    }
+    },
+
+
+    /*
+    Allow file and folder deletion. Be careful with this option!
+    */
+    "delete": {
+        "enabled": true
+    },
+
+     /*
+     File upload via drag'n'drop. Folders are not supported.
+     The working file size seems to be very browser dependent.
+
+     - maxfiles: number, max number of files per upload
+     - maxfilesize: number, file size is in MB
+     - allowedfiletypes: array of types, filetypes allowed by Content-Type.  Empty array means no restrictions
+     - allowedfileextensions: array of extensions, file extensions allowed. Empty array means no restrictions
+
+    for example:
+        "allowedfiletypes": ["image/jpeg","image/png","image/gif"],
+        "allowedfileextensions": [".jpg",".jpeg",".png",".gif",".pdf",".nzb",".torrent"]
+    */
+      "dropbox": {
+         "enabled": true,
+         "maxfiles": 10,
+         "maxfilesize": 1000,
+        "allowedfiletypes": [],
+        "allowedfileextensions": [".jpg",".jpeg",".png",".gif",".pdf",".nzb",".torrent"]
+     },
+
+    /*
+     Allow to rename files.
+     No GUI yet.
+     */
+     "rename": {
+         "enabled": false
+     }
 }

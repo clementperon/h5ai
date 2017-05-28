@@ -10,6 +10,7 @@ modulejs.define('ext/l10n', ['_', '$', 'core/event', 'core/format', 'core/langs'
             lang: 'english',
 
             dateFormat: 'YYYY-MM-DD HH:mm',
+            delete: 'Delete',
             details: 'details',
             download: 'download',
             empty: 'empty',

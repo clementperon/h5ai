@@ -155,6 +155,29 @@ class Util {
     }
 
 
+    public static function delete_path($path, $recursive = true) {
+
+        if (is_file($path)) {
+            return @unlink($path);
+        }
+
+        if (is_dir($path)) {
+            if ($recursive === true && $dir = opendir($path)) {
+                while (($name = readdir($dir)) !== false) {
+                    if($name != "." && $name != ".."){
+                        Util::delete_path($path . "/" . $name);
+                    }
+                }
+                closedir($dir);
+            }
+
+            return @rmdir($path);
+        }
+
+        return false;
+    }
+
+
     public static function exec_0($cmd) {
 
         $lines = [];

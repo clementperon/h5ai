@@ -1,6 +1,7 @@
 # Fork Modification
 
 * Autoplay configuration
+* Readd server-side manipulation delete, upload and rename
 
 
 # Changelog
