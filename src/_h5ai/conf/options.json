@@ -6,6 +6,18 @@ Options
 */
 
 {
+    /* Enable Authentication
+    -password : provide a md5-hashed password (http://www.md5.cz/)
+    -allowedips : leave empty to disable ip check
+    */
+    "security": {
+        "enabled": false,
+        "login": "user",
+        "password": "fe01ce2a7fbac8fafaed7c982a04e229",
+        "message": "Authentication Required !",
+        "allowedips": ["192.168.1.1","127.0.0.1"]
+    },
+
     /*
     General view options.
 

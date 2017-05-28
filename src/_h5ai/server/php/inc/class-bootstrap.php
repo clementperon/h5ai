@@ -25,7 +25,18 @@ class Bootstrap {
         $this->setup_ext_cmds();
 
         $app = new App();
-        if (Util::is_post_request()) {
+        $options = $app->get_options();
+
+        if ($options["security"]["enabled"] && (!isset($_SERVER['PHP_AUTH_USER']) || !isset($_SERVER['PHP_AUTH_PW'])
+            || ($_SERVER['PHP_AUTH_USER'] !== $options["security"]["login"] )
+            || ($_SERVER['PHP_AUTH_PW'] !== $options["security"]["pass"])) ) {
+
+            header('WWW-Authenticate: Basic realm='.$options["security"]["message"]);
+            header('HTTP/1.0 401 Unauthorized');
+            echo 'Acces non autorisé';
+            exit;
+        }
+        else if (Util::is_post_request()) {
             $api = new Api($app);
             $api->apply();
         } else {

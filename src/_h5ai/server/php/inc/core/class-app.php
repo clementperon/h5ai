@@ -13,7 +13,9 @@ class App {
 
     public function get_options() {
 
-        return $this->options;
+        $response = $this->options;
+        unset($response["options"]["security"]);
+        return $response;
     }
 
 

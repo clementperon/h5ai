@@ -3,6 +3,7 @@
 * Autoplay configuration
 * Readd server-side manipulation delete, upload and rename
 * Possibility to remove Icon, Size and Last Modified Date
+* Option to restrict access
 
 
 # Changelog
