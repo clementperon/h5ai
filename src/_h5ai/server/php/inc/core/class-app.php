@@ -8,6 +8,9 @@ class App {
     public function __construct() {
 
         $this->options = Util::load_commented_json(APP_PATH . "/conf/options.json");
+        if(file_exists(CURRENT_PATH . "/options.json")) {
+            $this->options = array_replace_recursive($this->options, Util::load_commented_json(CURRENT_PATH . "/options.json"));
+        }
     }
 
 
@@ -16,6 +19,12 @@ class App {
         $response = $this->options;
         unset($response["options"]["security"]);
         return $response;
+    }
+
+
+    public function set_options($filename){
+
+        $this->options = array_replace_recursive($this->options, Util::load_commented_json($filename));
     }
 
 

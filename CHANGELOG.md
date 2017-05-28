@@ -5,6 +5,7 @@
 * Possibility to remove Icon, Size and Last Modified Date
 * Option to restrict access
 * Better thumb
+* Per directory configure files
 
 
 # Changelog

@@ -49,6 +49,14 @@ class Item {
         $this->date = @filemtime($this->path);
         $this->size = Util::filesize($app, $this->path);
         $this->is_content_fetched = false;
+
+        $options = $app->get_options();
+        // if (!$this->is_folder && $options["hashes"]["enabled"]) {
+        if (!$this->is_folder) {
+            if($options["view"]["loadsubconf"] && basename($this->path) == "options.json"){
+                $this->app->set_options($this->path);
+            }
+        }
     }
 
 
